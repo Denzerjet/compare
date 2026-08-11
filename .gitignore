@@ -11,3 +11,8 @@ __pycache__/
 
 # cached Trac responses so re-mining costs their server nothing
 repo/.trac-cache/
+
+# exported chat transcript -- contains API keys in plaintext
+chat_log.jsonl
+chat_log.json
+session-export.md
