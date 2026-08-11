@@ -1,0 +1,35 @@
+commit 60a9c70496e5d7b971928ce3da5b47c8836a4def
+Author: Fashad Ahmed <fashad.ahmed20@gmail.com>
+Date:   Tue Apr 28 22:38:36 2026 +0200
+
+    Fixed #37067 -- Added trailing slash in django_file_prefixes().
+    
+    Ensure skip_file_prefixes does not match sibling packages like django*.
+    
+    Bug in f42b89f1bf49a5b89ed852b60f79342320a81c5e
+    and 34bd3ed944bf38792c631b55e581963d44d52284.
+
+diff --git a/tests/deprecation/tests.py b/tests/deprecation/tests.py
+index ac610b4928..0993e8a450 100644
+--- a/tests/deprecation/tests.py
++++ b/tests/deprecation/tests.py
+@@ -1,5 +1,6 @@
+ import os
+ import warnings
++from pathlib import Path
+ 
+ import django
+ from django.test import SimpleTestCase
+@@ -31,7 +32,11 @@ class DjangoFilePrefixesTests(SimpleTestCase):
+         prefixes = django_file_prefixes()
+         self.assertIsInstance(prefixes, tuple)
+         self.assertEqual(len(prefixes), 1)
+-        self.assertTrue(prefixes[0].endswith(f"{os.path.sep}django"))
++        self.assertTrue(prefixes[0].endswith(f"{os.path.sep}django{os.path.sep}"))
++
++    def test_does_not_match_packages_prefixed_with_django(self):
++        other_file = Path(django.__file__).parent.parent / "djangoextra" / "__init__.py"
++        self.assertFalse(str(other_file).startswith(django_file_prefixes()))
+ 
+ 
+ class RenameManagerMethods(RenameMethodsBase):

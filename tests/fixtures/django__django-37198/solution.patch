@@ -1,0 +1,19 @@
+commit c2517faff335f683e1cbe55d9844910b3fb40670
+Author: Vishy <vis.pypi@gmail.com>
+Date:   Mon Jul 6 09:27:02 2026 -0400
+
+    Fixed #37198 -- Fixed content_disposition_header() quoting of filenames ending with newlines.
+
+diff --git a/django/utils/http.py b/django/utils/http.py
+index 3d5b7b6be6..a892221f01 100644
+--- a/django/utils/http.py
++++ b/django/utils/http.py
+@@ -420,7 +420,7 @@ def content_disposition_header(as_attachment, filename):
+         # characters from 0x21 to 0x7e, except 0x22 (`"`) and 0x5C (`\`) which
+         # can still be expressed but must be escaped with their own `\`.
+         # https://datatracker.ietf.org/doc/html/rfc9110#name-quoted-strings
+-        quotable_characters = r"^[\t \x21-\x7e]*$"
++        quotable_characters = r"^[\t \x21-\x7e]*\Z"
+         if is_ascii and re.match(quotable_characters, filename):
+             file_expr = 'filename="{}"'.format(
+                 filename.replace("\\", "\\\\").replace('"', r"\"")

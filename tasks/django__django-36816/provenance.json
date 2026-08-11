@@ -1,0 +1,40 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "e27f23b268c520957384054fb236cfc303f95f51",
+  "base_commit": "78a3ffbb4cec25ed003f16cf4b1aa0b4bcdc2590",
+  "commit_date": "2026-04-07",
+  "subject": "Fixed #36816 -- Allowed **kwargs in @task decorator.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36816",
+  "source_files": [
+    "django/tasks/base.py"
+  ],
+  "test_files": [
+    "tests/tasks/test_custom_backend.py",
+    "tests/tasks/test_tasks.py"
+  ],
+  "dropped_files": [
+    "docs/ref/tasks.txt",
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "tasks.test_custom_backend",
+    "tasks.test_tasks"
+  ],
+  "narrowed_test_labels": [
+    "tasks.test_custom_backend",
+    "tasks.test_tasks"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.74,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

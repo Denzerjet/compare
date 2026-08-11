@@ -1,0 +1,35 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "56050acb96abc7ac2079d83ffdd232056732bb47",
+  "base_commit": "61e078ecab9a9e8de9d283adf9fa554b6a145ce8",
+  "commit_date": "2026-06-23",
+  "subject": "Fixed #37170 -- Applied the no-argument form of sensitive_post_parameters to MultiValueDict.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37170",
+  "source_files": [
+    "django/views/debug.py"
+  ],
+  "test_files": [
+    "tests/view_tests/tests/test_debug.py",
+    "tests/view_tests/views.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "view_tests.tests.test_debug"
+  ],
+  "narrowed_test_labels": [
+    "view_tests.tests.test_debug"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 3.14,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

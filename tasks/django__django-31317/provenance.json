@@ -1,0 +1,37 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "cd385e6b8c16b51f68c1f220ff09a4cfd679af0c",
+  "base_commit": "63ff1142b2f0cba1981825c65b62425e9ff7734b",
+  "commit_date": "2026-06-15",
+  "subject": "Fixed #31317 -- Avoided crash in CreateModel with unique_together and AlterUniqueTogether.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/31317",
+  "source_files": [
+    "django/db/backends/base/schema.py"
+  ],
+  "test_files": [
+    "tests/migrations/test_operations.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "migrations.test_operations"
+  ],
+  "narrowed_test_labels": [
+    "migrations.test_operations"
+  ],
+  "skipped_tests": [
+    "migrations.test_operations.OperationTests.test_alter_model_table_comment",
+    "migrations.test_operations.OperationTests.test_create_model_with_covering_unique_constraint"
+  ],
+  "graded_runtime_sec": 2.58,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

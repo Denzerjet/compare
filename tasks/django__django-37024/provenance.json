@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "179aa21b6dfeb9a0560a8c2bbfcf056301fc619f",
+  "base_commit": "aad47fe1bfc789f4b0ad0dc6373c945663e91f93",
+  "commit_date": "2026-04-19",
+  "subject": "Fixed #37024 -- Made SITE_ID system check validation use Site._meta.pk.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37024",
+  "source_files": [
+    "django/contrib/sites/checks.py"
+  ],
+  "test_files": [
+    "tests/sites_tests/tests.py"
+  ],
+  "dropped_files": [
+    "docs/ref/checks.txt"
+  ],
+  "full_test_labels": [
+    "sites_tests.tests"
+  ],
+  "narrowed_test_labels": [
+    "sites_tests.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.52,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

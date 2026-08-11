@@ -1,0 +1,43 @@
+commit 61a62be313e395ce1265132bfc99f51476fb3c95
+Author: Simon Charette <charette.s@gmail.com>
+Date:   Wed Apr 22 11:46:49 2026 -0400
+
+    Fixed #37057 -- Adjusted UniqueConstraint handling of UNKNOWN condition.
+    
+    When we adjusted UNKNOWN handling for CheckConstraint in refs #33996 we assumed
+    that all usage of Q.check would benefit from this approach.
+    
+    However while CHECK constraints enforcement do ignore conditions involving NULL
+    that resolve to UNKNOWN it's not the case for other type of constraints such as
+    UNIQUE ones.
+    
+    Given how UNKNOWN should be treated depends on the callers context it appears
+    that a better strategy for COALESCE wrapping is to force them to apply it if
+    necessary.
+    
+    Thanks Drew Shapiro for the report.
+
+diff --git a/tests/constraints/tests.py b/tests/constraints/tests.py
+index 39b170125f..0c10429c22 100644
+--- a/tests/constraints/tests.py
++++ b/tests/constraints/tests.py
+@@ -1297,6 +1297,19 @@ class UniqueConstraintTests(TestCase):
+         with self.assertRaisesMessage(ValidationError, msg):
+             constraint.validate(Product, Product(price=None))
+ 
++    @skipUnlessDBFeature("supports_comparing_boolean_expr")
++    def test_validate_nullable_condition(self):
++        GeneratedFieldStoredProduct.objects.create(name="Product", price=42)
++        constraint = models.UniqueConstraint(
++            fields=["name"],
++            name="uniq_name_for_positive_price",
++            condition=models.Q(price__gt=0),
++        )
++        constraint.validate(
++            GeneratedFieldStoredProduct,
++            GeneratedFieldStoredProduct(name="Product", price=None),
++        )
++
+     def test_name(self):
+         constraints = get_constraints(UniqueConstraintProduct._meta.db_table)
+         expected_name = "name_color_uniq"

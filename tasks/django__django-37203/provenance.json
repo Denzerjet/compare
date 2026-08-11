@@ -1,0 +1,42 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "2a5da9d00555beef8e5f6307cfcbfc029d45491e",
+  "base_commit": "d8cedcab5241725003eef059dd76c533f24c5430",
+  "commit_date": "2026-07-23",
+  "subject": "Fixed #37203 -- Used normalized field names for composite pks in inspectdb.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37203",
+  "source_files": [
+    "django/core/management/commands/inspectdb.py"
+  ],
+  "test_files": [
+    "tests/inspectdb/models.py",
+    "tests/inspectdb/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "inspectdb.tests"
+  ],
+  "narrowed_test_labels": [
+    "inspectdb.tests"
+  ],
+  "skipped_tests": [
+    "inspectdb.tests.InspectDBNotSupportedTests.test_not_supported",
+    "inspectdb.tests.InspectDBTestCase.test_db_comments",
+    "inspectdb.tests.InspectDBTestCase.test_unsupported_unique_together",
+    "inspectdb.tests.InspectDBTransactionalTests.test_foreign_data_wrapper",
+    "inspectdb.tests.InspectDBTransactionalTests.test_include_materialized_views",
+    "inspectdb.tests.InspectDBTransactionalTests.test_include_partitions"
+  ],
+  "graded_runtime_sec": 1.64,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "Proposed fix",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

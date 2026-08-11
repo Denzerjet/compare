@@ -1,0 +1,39 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "ca5746b8680a5e7e14014d365c0610f825df1dae",
+  "base_commit": "07394506a7d78d3dbfea081669df6a5009053a86",
+  "commit_date": "2026-06-18",
+  "subject": "Fixed #37143 -- Added missing chunk_size=None check to QuerySet.aiterator().",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37143",
+  "source_files": [
+    "django/db/models/query.py"
+  ],
+  "test_files": [
+    "tests/async/test_async_queryset.py"
+  ],
+  "dropped_files": [
+    "docs/internals/deprecation.txt",
+    "docs/releases/6.2.txt"
+  ],
+  "full_test_labels": [
+    "async.test_async_queryset"
+  ],
+  "narrowed_test_labels": [
+    "async.test_async_queryset"
+  ],
+  "skipped_tests": [
+    "async.test_async_queryset.AsyncQuerySetTest.test_update_conflicts_unique_field_unsupported"
+  ],
+  "graded_runtime_sec": 1.59,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

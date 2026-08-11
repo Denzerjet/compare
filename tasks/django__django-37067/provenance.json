@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "60a9c70496e5d7b971928ce3da5b47c8836a4def",
+  "base_commit": "61941b6fc172933f425e8ba76bab444ab9b313e4",
+  "commit_date": "2026-04-29",
+  "subject": "Fixed #37067 -- Added trailing slash in django_file_prefixes().",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37067",
+  "source_files": [
+    "django/utils/deprecation.py"
+  ],
+  "test_files": [
+    "tests/deprecation/tests.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.0.5.txt"
+  ],
+  "full_test_labels": [
+    "deprecation.tests"
+  ],
+  "narrowed_test_labels": [
+    "deprecation.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.37,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

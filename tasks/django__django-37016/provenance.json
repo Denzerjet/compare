@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "3b161e60964aff99eddcd2627a486d81c1836b3a",
+  "base_commit": "123fa3a3f38abdb73055acc9a2cbbe3537f9323a",
+  "commit_date": "2026-04-03",
+  "subject": "Fixed #37016 -- Avoided propagating invalid arguments from When() to Q().",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37016",
+  "source_files": [
+    "django/db/models/expressions.py",
+    "django/db/models/query.py",
+    "django/db/models/query_utils.py"
+  ],
+  "test_files": [
+    "tests/expressions_case/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "expressions_case.tests"
+  ],
+  "narrowed_test_labels": [
+    "expressions_case.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.56,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

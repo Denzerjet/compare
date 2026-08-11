@@ -1,0 +1,36 @@
+commit 53645750412efa1e9013004040db328bd515e0f1
+Author: Varun Kasyap <varunkasyap@hotmail.com>
+Date:   Sat May 16 12:26:14 2026 +0530
+
+    Fixed #37100 -- Prevented control characters in HttpResponse reason_phrase.
+
+diff --git a/django/http/response.py b/django/http/response.py
+index 17b8da4da1..12cf47b1c1 100644
+--- a/django/http/response.py
++++ b/django/http/response.py
+@@ -32,6 +32,7 @@ from django.utils.regex_helper import _lazy_re_compile
+ _charset_from_content_type_re = _lazy_re_compile(
+     r";\s*charset=(?P<charset>[^\s;]+)", re.I
+ )
++_control_chars_re = _lazy_re_compile(r"[\x00-\x1f\x7f-\x9f]")
+ 
+ 
+ class ResponseHeaders(CaseInsensitiveMapping):
+@@ -142,7 +143,7 @@ class HttpResponseBase:
+ 
+             if not 100 <= self.status_code <= 599:
+                 raise ValueError("HTTP status code must be an integer from 100 to 599.")
+-        self._reason_phrase = reason
++        self.reason_phrase = reason
+ 
+     @property
+     def reason_phrase(self):
+@@ -154,6 +155,8 @@ class HttpResponseBase:
+ 
+     @reason_phrase.setter
+     def reason_phrase(self, value):
++        if value and _control_chars_re.search(value):
++            raise BadHeaderError("reason_phrase can't contain control characters.")
+         self._reason_phrase = value
+ 
+     @property

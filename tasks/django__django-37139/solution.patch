@@ -1,0 +1,30 @@
+commit a2348c85fc6c20087935c74cd99340dd4ef2dcdc
+Author: Mariusz Felisiak <felisiak.mariusz@gmail.com>
+Date:   Fri Jun 5 12:10:10 2026 +0200
+
+    Fixed #37139 -- Fixed inlines crash on parent models with db_default on primary key.
+
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index d53da600d7..7ac02f8a50 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -709,9 +709,17 @@ class Model(AltersData, metaclass=ModelBase):
+ 
+     def _is_pk_set(self, meta=None):
+         pk_val = self._get_pk_val(meta)
++
++        def _is_set(value):
++            return (
++                value is None
++                # Empty value when db_default is used.
++                or isinstance(value, DatabaseDefault)
++            )
++
+         return not (
+-            pk_val is None
+-            or (isinstance(pk_val, tuple) and any(f is None for f in pk_val))
++            _is_set(pk_val)
++            or (isinstance(pk_val, tuple) and any(_is_set(f) for f in pk_val))
+         )
+ 
+     def get_deferred_fields(self):

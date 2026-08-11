@@ -1,0 +1,34 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "71af23d1f4678c4bf052e051d72e8928e1697de3",
+  "base_commit": "526b1b414d8e215bf627b5722df12a09346dbf6b",
+  "commit_date": "2026-06-09",
+  "subject": "Fixed #37147 -- Fixed rendering empty values for models with db_default on primary key.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37147",
+  "source_files": [
+    "django/forms/widgets.py"
+  ],
+  "test_files": [
+    "tests/forms_tests/widget_tests/test_widget.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "forms_tests.widget_tests.test_widget"
+  ],
+  "narrowed_test_labels": [
+    "forms_tests.widget_tests.test_widget"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.39,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

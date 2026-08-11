@@ -1,0 +1,34 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "a2f8a4a6f9ac094edde937e56a3ecbd112ee448c",
+  "base_commit": "15bcbeeb95ca34385c119acea14df1f5e7274d45",
+  "commit_date": "2026-06-10",
+  "subject": "Fixed #36104 -- Returned NotImplemented in Media.__add__ for non-Media RHS.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36104",
+  "source_files": [
+    "django/forms/widgets.py"
+  ],
+  "test_files": [
+    "tests/forms_tests/tests/test_media.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "forms_tests.tests.test_media"
+  ],
+  "narrowed_test_labels": [
+    "forms_tests.tests.test_media"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.39,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

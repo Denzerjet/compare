@@ -1,0 +1,37 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "3f912ee4189602b4df121c0dc0428673fda5c253",
+  "base_commit": "60a9c70496e5d7b971928ce3da5b47c8836a4def",
+  "commit_date": "2026-04-29",
+  "subject": "Fixed #16429 -- Extracted set_choices() method from FilePathField.__init__().",
+  "trac_ticket": "https://code.djangoproject.com/ticket/16429",
+  "source_files": [
+    "django/forms/fields.py"
+  ],
+  "test_files": [
+    "tests/forms_tests/field_tests/test_filepathfield.py"
+  ],
+  "dropped_files": [
+    "docs/ref/forms/fields.txt",
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "forms_tests.field_tests.test_filepathfield"
+  ],
+  "narrowed_test_labels": [
+    "forms_tests.field_tests.test_filepathfield"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.36,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

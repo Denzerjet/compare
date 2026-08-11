@@ -1,0 +1,43 @@
+commit dc467fdc3b5744cec71fab876c23a14013e2510b
+Author: Dinesh <dineshthumma15@gmail.com>
+Date:   Sat Mar 21 22:51:11 2026 +0530
+
+    Fixed #36991 -- Raised BadRequest for invalid encodings in Content-Type headers.
+
+diff --git a/django/http/request.py b/django/http/request.py
+index f871ea15e8..44bf09450b 100644
+--- a/django/http/request.py
++++ b/django/http/request.py
+@@ -155,9 +155,12 @@ class HttpRequest:
+ 
+     def _set_content_type_params(self, meta):
+         """Set content_type, content_params, and encoding."""
+-        self.content_type, self.content_params = parse_header_parameters(
+-            meta.get("CONTENT_TYPE", "")
+-        )
++        try:
++            self.content_type, self.content_params = parse_header_parameters(
++                meta.get("CONTENT_TYPE", "")
++            )
++        except ValueError as exc:
++            raise BadRequest("Invalid Content-Type header.") from exc
+         if "charset" in self.content_params:
+             try:
+                 codecs.lookup(self.content_params["charset"])
+diff --git a/django/utils/http.py b/django/utils/http.py
+index f72f54e958..f6cce96206 100644
+--- a/django/utils/http.py
++++ b/django/utils/http.py
+@@ -366,7 +366,11 @@ def parse_header_parameters(line, max_length=MAX_HEADER_LENGTH):
+                 value = value.replace("\\\\", "\\").replace('\\"', '"')
+             if has_encoding:
+                 encoding, lang, value = value.split("'")
+-                value = unquote(value, encoding=encoding)
++                try:
++                    value = unquote(value, encoding=encoding)
++                except (LookupError, UnicodeDecodeError):
++                    msg = f"Invalid encoding {encoding!r} for RFC 2231 param."
++                    raise ValueError(msg)
+             pdict[name] = value
+     return key, pdict
+ 

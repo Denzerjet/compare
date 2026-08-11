@@ -1,0 +1,31 @@
+commit c9ff757a55392b1f50968eb89fe775f6155168d8
+Author: Filip Sedlák <filip@sedlakovi.org>
+Date:   Mon Jul 27 15:18:33 2026 +0530
+
+    Fixed #37234 -- Fixed bulk_create() for late-saved related primary keys.
+    
+    Objects with a primary key supplied by a late-saved related instance
+    were partitioned before their related fields were prepared. This
+    caused an assertion failure on backends returning rows from bulk
+    inserts.
+    
+    Regression in 7d9aab8da0a06787d649762a702e1a518d843a63.
+
+diff --git a/tests/bulk_create/tests.py b/tests/bulk_create/tests.py
+index 397fcb9186..eaf4bc0508 100644
+--- a/tests/bulk_create/tests.py
++++ b/tests/bulk_create/tests.py
+@@ -439,6 +439,13 @@ class BulkCreateTests(TestCase):
+         child = NullableFields.objects.get(integer_field=88)
+         self.assertEqual(child.auto_field, parent)
+ 
++    def test_pk_from_related_instance_saved_after_init(self):
++        country = Country(name="Syldavia", iso_two_letter="SW")
++        related = RelatedModel(country=country)
++        country.save()
++        RelatedModel.objects.bulk_create([related])
++        self.assertEqual(related.country_id, country.pk)
++
+     def test_unsaved_parent(self):
+         parent = NoFields()
+         msg = (

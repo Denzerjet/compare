@@ -1,0 +1,48 @@
+commit 856c915326768962806705ca7733e4abbb8f794f
+Author: Rodrigo Vieira <rodrigo.vieira@gmail.com>
+Date:   Tue Mar 31 20:34:56 2026 -0300
+
+    Fixed #37004 -- Used QuerySet.totally_ordered in BaseModelFormSet.get_queryset() for stable ordering.
+
+diff --git a/tests/model_formsets/tests.py b/tests/model_formsets/tests.py
+index 40f206277b..9436642573 100644
+--- a/tests/model_formsets/tests.py
++++ b/tests/model_formsets/tests.py
+@@ -1782,7 +1782,36 @@ class ModelFormsetTest(TestCase):
+         formset = ProductFormSet()
+ 
+         queryset = formset.get_queryset()
+-        self.assertEqual(queryset.query.order_by, ("id",))
++        self.assertEqual(queryset.query.order_by, ("pk",))
++
++    def test_get_queryset_appends_pk_to_explicit_queryset_ordering(self):
++        # Author.name is non-unique, so order_by("name") is not totally
++        # ordered.
++        AuthorFormSet = modelformset_factory(Author, fields="__all__")
++        formset = AuthorFormSet(queryset=Author.objects.order_by("name"))
++
++        queryset = formset.get_queryset()
++        self.assertEqual(queryset.query.order_by, ("name", "pk"))
++
++    def test_get_queryset_appends_pk_to_meta_ordering(self):
++        # Author has Meta.ordering = ("name",) which is not deterministic
++        # by itself.
++        AuthorFormSet = modelformset_factory(Author, fields="__all__")
++        formset = AuthorFormSet()
++
++        queryset = formset.get_queryset()
++        self.assertEqual(queryset.query.order_by, ("name", "pk"))
++
++    def test_get_queryset_unchanged_when_already_totally_ordered(self):
++        # Ordering by pk is already totally ordered; pk must not be
++        # appended again.
++        AuthorFormSet = modelformset_factory(Author, fields="__all__")
++        formset = AuthorFormSet(queryset=Author.objects.order_by("pk"))
++
++        queryset = formset.get_queryset()
++        # Must be exactly ("pk",), not ("pk", "pk").
++        self.assertEqual(queryset.query.order_by, ("pk",))
++        self.assertIs(queryset.totally_ordered, True)
+ 
+     def test_prevent_duplicates_from_with_the_same_formset(self):
+         FormSet = modelformset_factory(Product, fields="__all__", extra=2)

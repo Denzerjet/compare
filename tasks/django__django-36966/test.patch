@@ -1,0 +1,24 @@
+commit 6c95af5c9d294a20d09f080d7c144e3b7362d65f
+Author: Marc Gibbons <1726961+marcgibbons@users.noreply.github.com>
+Date:   Fri Mar 13 13:46:49 2026 -0400
+
+    Fixed #36966 -- Fixed ValueError when `query_params` and `follow` are used on test client.
+
+diff --git a/tests/test_client/tests.py b/tests/test_client/tests.py
+index 211b5d9e6f..8e62c717eb 100644
+--- a/tests/test_client/tests.py
++++ b/tests/test_client/tests.py
+@@ -1053,6 +1053,13 @@ class ClientTest(TestCase):
+                         query_params={"q": "terms"},
+                     )
+ 
++    def test_follow_redirect_with_query_params(self):
++        response = self.client.get(
++            "/redirect_view/", query_params={"next": "x"}, follow=True
++        )
++        self.assertEqual(response.status_code, 200)
++        self.assertEqual(response.wsgi_request.get_full_path(), "/get_view/?next=x")
++
+ 
+ @override_settings(
+     MIDDLEWARE=["django.middleware.csrf.CsrfViewMiddleware"],

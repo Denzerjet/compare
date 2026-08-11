@@ -1,0 +1,25 @@
+[project]
+name = "django-eval"
+version = "0.1.0"
+description = "Harness for comparing coding models on mined django bug-fix tasks"
+requires-python = ">=3.10"
+
+# Kept deliberately small. The test dependencies live in the container image
+# (src/harness/env/Dockerfile), not here -- the harness never imports django.
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+# Model provider SDKs land here in step 3, once the model set is chosen.
+models = []
+
+[project.scripts]
+harness = "harness.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"

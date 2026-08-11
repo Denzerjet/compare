@@ -1,0 +1,38 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "21c51c2623a966ba1ad8fd10e36bc8bbec93b70e",
+  "base_commit": "8f0abd228750f2146749260d607279eb96a88c25",
+  "commit_date": "2026-05-07",
+  "subject": "Fixed #37060 -- Propagated AlterField through attname-based to_field references.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37060",
+  "source_files": [
+    "django/db/backends/sqlite3/schema.py",
+    "django/db/backends/base/schema.py"
+  ],
+  "test_files": [
+    "tests/migrations/test_operations.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "migrations.test_operations"
+  ],
+  "narrowed_test_labels": [
+    "migrations.test_operations"
+  ],
+  "skipped_tests": [
+    "migrations.test_operations.OperationTests.test_alter_model_table_comment",
+    "migrations.test_operations.OperationTests.test_create_model_with_covering_unique_constraint"
+  ],
+  "graded_runtime_sec": 3.01,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

@@ -1,0 +1,13 @@
+# django clone -- large, and reconstructible from base_commit in each task
+repo/
+
+# per-run outputs; the benchmark in tasks/ is the committed artifact
+results/
+
+.venv/
+__pycache__/
+*.py[cod]
+.env
+
+# cached Trac responses so re-mining costs their server nothing
+repo/.trac-cache/

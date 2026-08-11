@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "e1df3950b2a3a852dfa9eb70738b7bac28cb0a0e",
+  "base_commit": "dc4e5461faa390991e6a0f6d3ca47690e8f5c4e1",
+  "commit_date": "2026-06-11",
+  "subject": "Fixed #36979 -- Made GenericInlineModelAdmin.get_formset() use get_exclude().",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36979",
+  "source_files": [
+    "django/contrib/contenttypes/admin.py"
+  ],
+  "test_files": [
+    "tests/generic_inline_admin/tests.py"
+  ],
+  "dropped_files": [
+    "AUTHORS"
+  ],
+  "full_test_labels": [
+    "generic_inline_admin.tests"
+  ],
+  "narrowed_test_labels": [
+    "generic_inline_admin.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.58,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

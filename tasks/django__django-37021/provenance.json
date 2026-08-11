@@ -1,0 +1,38 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "e2abe321a6f1370e05c1a89a742125c9eafcac8c",
+  "base_commit": "74e73dc1315d696330621a7f08310a2e87ea0eba",
+  "commit_date": "2026-04-07",
+  "subject": "Fixed #37021 -- Added Permission.user_perm_str property.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37021",
+  "source_files": [
+    "django/contrib/auth/models.py"
+  ],
+  "test_files": [
+    "tests/auth_tests/test_models.py"
+  ],
+  "dropped_files": [
+    "docs/ref/contrib/auth.txt",
+    "docs/releases/6.1.txt",
+    "docs/topics/auth/default.txt"
+  ],
+  "full_test_labels": [
+    "auth_tests.test_models"
+  ],
+  "narrowed_test_labels": [
+    "auth_tests.test_models"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 6.29,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

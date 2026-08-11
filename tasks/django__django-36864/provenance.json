@@ -1,0 +1,49 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "65a9f14196c338d70889bd54753370606b3fb4eb",
+  "base_commit": "f51347964a85bd4881caabf3c736b2c54d75262f",
+  "commit_date": "2026-07-10",
+  "subject": "Fixed #36864 -- Supported modules and submodules in import_string().",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36864",
+  "source_files": [
+    "django/utils/module_loading.py",
+    "django/db/backends/base/creation.py",
+    "django/contrib/auth/password_validation.py"
+  ],
+  "test_files": [
+    "tests/auth_tests/test_models.py",
+    "tests/auth_tests/test_validators.py",
+    "tests/utils_tests/test_module/collision/__init__.py",
+    "tests/utils_tests/test_module/collision/collider.py",
+    "tests/utils_tests/test_module_loading.py"
+  ],
+  "dropped_files": [
+    "docs/ref/utils.txt",
+    "docs/releases/6.2.txt"
+  ],
+  "full_test_labels": [
+    "auth_tests.test_models",
+    "auth_tests.test_validators",
+    "utils_tests.test_module_loading"
+  ],
+  "narrowed_test_labels": [
+    "auth_tests.test_models",
+    "auth_tests.test_validators",
+    "utils_tests.test_module_loading"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 7.01,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

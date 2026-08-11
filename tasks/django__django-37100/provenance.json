@@ -1,0 +1,34 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "53645750412efa1e9013004040db328bd515e0f1",
+  "base_commit": "bc9bed573ce39c3b739a4a3b7848816d464b6bdc",
+  "commit_date": "2026-05-22",
+  "subject": "Fixed #37100 -- Prevented control characters in HttpResponse reason_phrase.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37100",
+  "source_files": [
+    "django/http/response.py"
+  ],
+  "test_files": [
+    "tests/responses/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "responses.tests"
+  ],
+  "narrowed_test_labels": [
+    "responses.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.38,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

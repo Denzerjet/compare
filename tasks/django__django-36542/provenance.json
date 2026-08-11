@@ -1,0 +1,37 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "526b548cfb9c8a02ea2b7ae064ef3b795305d51a",
+  "base_commit": "ad073338d02fce884301d159f30eaf17c7f2d246",
+  "commit_date": "2026-04-24",
+  "subject": "Fixed #36542 -- Marked authenticate() with @sensitive_variables() decorator.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36542",
+  "source_files": [
+    "django/contrib/auth/backends.py"
+  ],
+  "test_files": [
+    "tests/auth_tests/models/custom_user.py",
+    "tests/auth_tests/test_auth_backends.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "auth_tests.test_auth_backends"
+  ],
+  "narrowed_test_labels": [
+    "auth_tests.test_auth_backends"
+  ],
+  "skipped_tests": [
+    "auth_tests.test_auth_backends.AuthenticateTests.test_backend_uses_deferred_annotations"
+  ],
+  "graded_runtime_sec": 1.99,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

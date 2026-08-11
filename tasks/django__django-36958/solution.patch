@@ -1,0 +1,38 @@
+commit 2d7f899deb2e3e58438a0703d6c3be4227641239
+Author: SnippyCodes <aaryanparik124@gmail.com>
+Date:   Sat Feb 28 11:06:04 2026 +0530
+
+    Fixed #36958 -- Reloaded logging config when logging settings are changed in tests.
+    
+    Thanks JaeHyuck Sa and Jake Howard for the reviews.
+
+diff --git a/django/test/signals.py b/django/test/signals.py
+index cb78b76114..f594ae434b 100644
+--- a/django/test/signals.py
++++ b/django/test/signals.py
+@@ -5,6 +5,7 @@ import warnings
+ from asgiref.local import Local
+ 
+ from django.apps import apps
++from django.conf import settings
+ from django.core.exceptions import ImproperlyConfigured
+ from django.core.signals import setting_changed
+ from django.db import connections, router
+@@ -13,6 +14,7 @@ from django.dispatch import Signal, receiver
+ from django.utils import timezone
+ from django.utils.formats import FORMAT_SETTINGS, reset_format_cache
+ from django.utils.functional import empty
++from django.utils.log import configure_logging
+ 
+ template_rendered = Signal()
+ 
+@@ -251,3 +253,9 @@ def user_model_swapped(*, setting, **kwargs):
+             from django.contrib.auth import views
+ 
+             views.UserModel = UserModel
++
++
++@receiver(setting_changed)
++def update_logging_config(*, setting, **kwargs):
++    if setting in {"LOGGING", "LOGGING_CONFIG"}:
++        configure_logging(settings.LOGGING_CONFIG, settings.LOGGING)

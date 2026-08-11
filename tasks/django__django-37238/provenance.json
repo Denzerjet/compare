@@ -1,0 +1,37 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "9465349120ef8a0b0689e12bcbfd05f3d173ebdf",
+  "base_commit": "8c83e9c0ea39099b213478a893cbebe9faa837ba",
+  "commit_date": "2026-07-31",
+  "subject": "Fixed #37238 -- Prevented fallback to python default for a pk with a db_default.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37238",
+  "source_files": [
+    "django/db/models/base.py"
+  ],
+  "test_files": [
+    "tests/field_defaults/models.py",
+    "tests/field_defaults/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "field_defaults.tests"
+  ],
+  "narrowed_test_labels": [
+    "field_defaults.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.36,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

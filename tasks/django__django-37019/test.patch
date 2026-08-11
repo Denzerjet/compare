@@ -1,0 +1,49 @@
+commit 8f84f269353e242e72eea55aa58df92d87df0453
+Author: vishwa <vis.pypi@gmail.com>
+Date:   Sun Apr 5 15:04:05 2026 -0400
+
+    Fixed #37019 -- Updated login() and logout() to set request.auser.
+
+diff --git a/tests/auth_tests/test_middleware.py b/tests/auth_tests/test_middleware.py
+index 894b49548b..a1c047abbd 100644
+--- a/tests/auth_tests/test_middleware.py
++++ b/tests/auth_tests/test_middleware.py
+@@ -1,5 +1,7 @@
++from asgiref.sync import sync_to_async
++
+ from django.conf import settings
+-from django.contrib.auth import REDIRECT_FIELD_NAME, alogin, alogout
++from django.contrib.auth import REDIRECT_FIELD_NAME, alogin, alogout, login, logout
+ from django.contrib.auth.middleware import (
+     AuthenticationMiddleware,
+     LoginRequiredMiddleware,
+@@ -68,6 +70,14 @@ class TestAuthenticationMiddleware(TestCase):
+         auser_second = await self.request.auser()
+         self.assertEqual(auser_second, self.user2)
+ 
++    async def test_auser_after_login(self):
++        self.middleware(self.request)
++        auser = await self.request.auser()
++        self.assertEqual(auser, self.user)
++        await sync_to_async(login)(self.request, self.user2)
++        auser_second = await self.request.auser()
++        self.assertEqual(auser_second, self.user2)
++
+     async def test_auser_after_alogout(self):
+         self.middleware(self.request)
+         auser = await self.request.auser()
+@@ -76,6 +86,14 @@ class TestAuthenticationMiddleware(TestCase):
+         auser_second = await self.request.auser()
+         self.assertTrue(auser_second.is_anonymous)
+ 
++    async def test_auser_after_logout(self):
++        self.middleware(self.request)
++        auser = await self.request.auser()
++        self.assertEqual(auser, self.user)
++        await sync_to_async(logout)(self.request)
++        auser_second = await self.request.auser()
++        self.assertTrue(auser_second.is_anonymous)
++
+ 
+ class TestAsyncLoginLogoutAfterSyncMiddleware(TestCase):
+     @classmethod

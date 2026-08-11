@@ -1,0 +1,159 @@
+commit 57c8c8b107248a3358dd26276ac497c577454011
+Author: Karolis Ryselis <karolis.ryselis@gmail.com>
+Date:   Thu Mar 19 09:46:21 2026 +0200
+
+    Fixed #36984 -- Made inline formset error messages respect delete_confirmation_max_display.
+
+diff --git a/tests/admin_inlines/admin.py b/tests/admin_inlines/admin.py
+index dbb74991dc..4ab00b1df6 100644
+--- a/tests/admin_inlines/admin.py
++++ b/tests/admin_inlines/admin.py
+@@ -296,6 +296,7 @@ class PollAdmin(admin.ModelAdmin):
+ class ChapterInline(admin.TabularInline):
+     model = Chapter
+     readonly_fields = ["call_me"]
++    delete_confirmation_max_display = 3
+ 
+     def call_me(self, obj):
+         return "Callable in ChapterInline"
+diff --git a/tests/admin_inlines/models.py b/tests/admin_inlines/models.py
+index ea5ba78656..3c2758705c 100644
+--- a/tests/admin_inlines/models.py
++++ b/tests/admin_inlines/models.py
+@@ -247,9 +247,7 @@ class Chapter(models.Model):
+ 
+ 
+ class FootNote(models.Model):
+-    """
+-    Model added for ticket 19838
+-    """
++    """Model for models.PROTECT."""
+ 
+     chapter = models.ForeignKey(Chapter, models.PROTECT)
+     note = models.CharField(max_length=40)
+diff --git a/tests/admin_inlines/tests.py b/tests/admin_inlines/tests.py
+index eda7c91310..a2814a8d46 100644
+--- a/tests/admin_inlines/tests.py
++++ b/tests/admin_inlines/tests.py
+@@ -830,6 +830,76 @@ class TestInline(TestDataMixin, TestCase):
+         parent.refresh_from_db()
+         self.assertIs(parent.show_inlines, True)
+ 
++    def test_delete_protected_message_limits_number_of_objects_displayed(self):
++        # admin limits the number of displayed objects to 2, so we create
++        # 5 footnotes.
++        novel = Novel.objects.create()
++        chapter = Chapter.objects.create(novel=novel)
++        footnotes = [FootNote(chapter=chapter) for i in range(5)]
++        FootNote.objects.bulk_create(footnotes)
++
++        response = self.client.post(
++            reverse("admin:admin_inlines_novel_change", args=(novel.pk,)),
++            data={
++                "show_inlines": "on",
++                "chapter_set-TOTAL_FORMS": "1",
++                "chapter_set-INITIAL_FORMS": "1",
++                "chapter_set-MAX_NUM_FORMS": "1000",
++                "chapter_set-MIN_NUM_FORMS": "0",
++                "chapter_set-0-id": chapter.id,
++                "chapter_set-0-name": chapter.name,
++                "chapter_set-0-novel": novel.id,
++                "chapter_set-0-DELETE": "on",
++            },
++        )
++        self.assertEqual(response.status_code, 200)
++        inline_formset = response.context_data["inline_admin_formsets"][0]
++        self.assertEqual(1, len(inline_formset.non_form_errors()))
++        error_message = inline_formset.non_form_errors()[0]
++        self.assertTrue(
++            error_message.startswith(
++                f"Deleting chapter Chapter object ({chapter.pk}) would "
++                "require deleting the following protected related objects:"
++            ),
++            error_message,
++        )
++        self.assertEqual(error_message.count("FootNote"), 3, error_message)
++        self.assertTrue(error_message.endswith("…and 2 more objects."), error_message)
++
++    def test_delete_protected_message_does_not_limit_small_amount_of_objects(self):
++        novel = Novel.objects.create()
++        chapter = Chapter.objects.create(novel=novel)
++        footnotes = [FootNote(chapter=chapter) for i in range(3)]
++        FootNote.objects.bulk_create(footnotes)
++
++        response = self.client.post(
++            reverse("admin:admin_inlines_novel_change", args=(novel.pk,)),
++            data={
++                "show_inlines": "on",
++                "chapter_set-TOTAL_FORMS": "1",
++                "chapter_set-INITIAL_FORMS": "1",
++                "chapter_set-MAX_NUM_FORMS": "1000",
++                "chapter_set-MIN_NUM_FORMS": "0",
++                "chapter_set-0-id": chapter.id,
++                "chapter_set-0-name": chapter.name,
++                "chapter_set-0-novel": novel.id,
++                "chapter_set-0-DELETE": "on",
++            },
++        )
++        self.assertEqual(response.status_code, 200)
++        inline_formset = response.context_data["inline_admin_formsets"][0]
++        self.assertEqual(1, len(inline_formset.non_form_errors()))
++        error_message = inline_formset.non_form_errors()[0]
++        self.assertTrue(
++            error_message.startswith(
++                f"Deleting chapter Chapter object ({chapter.pk}) would require "
++                "deleting the following protected related objects:"
++            ),
++            error_message,
++        )
++        self.assertEqual(error_message.count("FootNote object"), 3)
++        self.assertNotIn("more", error_message)
++
+ 
+ @override_settings(ROOT_URLCONF="admin_inlines.urls")
+ class TestInlineMedia(TestDataMixin, TestCase):
+diff --git a/tests/modeladmin/test_checks.py b/tests/modeladmin/test_checks.py
+index bcac262d69..40777d1458 100644
+--- a/tests/modeladmin/test_checks.py
++++ b/tests/modeladmin/test_checks.py
+@@ -1033,7 +1033,7 @@ class DeleteConfirmationMaxObjectsCheckTests(CheckTestCase):
+                 "'delete_confirmation_max_display'"
+                 " must be a non-negative integer or None."
+             ),
+-            "admin.E131",
++            "admin.E041",
+         )
+ 
+     def test_negative_integer(self):
+@@ -1048,7 +1048,7 @@ class DeleteConfirmationMaxObjectsCheckTests(CheckTestCase):
+                 "'delete_confirmation_max_display'"
+                 " must be a non-negative integer or None."
+             ),
+-            "admin.E131",
++            "admin.E041",
+         )
+ 
+     def test_valid_case(self):
+@@ -1063,6 +1063,22 @@ class DeleteConfirmationMaxObjectsCheckTests(CheckTestCase):
+ 
+         self.assertIsValid(TestModelAdmin, ValidationTestModel)
+ 
++    def test_inline_not_integer(self):
++        class TestInlineModelAdmin(TabularInline):
++            delete_confirmation_max_display = "goodbye"
++            model = ValidationTestInlineModel
++
++        self.assertIsInvalid(
++            TestInlineModelAdmin,
++            ValidationTestModel,
++            (
++                "The value of "
++                "'delete_confirmation_max_display'"
++                " must be a non-negative integer or None."
++            ),
++            "admin.E041",
++        )
++
+ 
+ class SearchFieldsCheckTests(CheckTestCase):
+     def test_not_iterable(self):

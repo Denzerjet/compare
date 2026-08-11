@@ -1,0 +1,66 @@
+commit 4b2b4bf0ac2707dc9c4d51cabfa72168eaea95fe
+Author: huwaiza tahir <muhammadhuwaizatahir@gmail.com>
+Date:   Wed Mar 18 12:40:04 2026 +0500
+
+    Fixed #36926 -- Made admin use boolean icons for related BooleanFields in list_display.
+    
+    When using related field lookups like 'parent__is_active' in list_display,
+    the admin now correctly detects if the final field is a BooleanField and
+    displays boolean icons instead of 'True'/'False' text.
+    
+    Modified lookup_field() in django/contrib/admin/utils.py to retrieve the
+    final field from the path when traversing relations using LOOKUP_SEP (__),
+    allowing display_for_field() to properly handle BooleanFields.
+
+diff --git a/tests/admin_changelist/models.py b/tests/admin_changelist/models.py
+index 0b594300d2..d5d0633122 100644
+--- a/tests/admin_changelist/models.py
++++ b/tests/admin_changelist/models.py
+@@ -17,6 +17,7 @@ class Child(models.Model):
+     parent = models.ForeignKey(Parent, models.SET_NULL, editable=False, null=True)
+     name = models.CharField(max_length=30, blank=True)
+     age = models.IntegerField(null=True, blank=True)
++    is_active = models.BooleanField(default=True)
+ 
+ 
+ class GrandChild(models.Model):
+diff --git a/tests/admin_changelist/tests.py b/tests/admin_changelist/tests.py
+index f051849449..ef0f8a0570 100644
+--- a/tests/admin_changelist/tests.py
++++ b/tests/admin_changelist/tests.py
+@@ -1768,6 +1768,35 @@ class ChangeListTests(TestCase):
+         cl = m.get_changelist_instance(request)
+         self.assertEqual(cl.get_ordering_field_columns(), {2: "asc"})
+ 
++    def test_list_display_related_field_boolean_display(self):
++        """
++        Related boolean fields (parent__is_active) display boolean icons.
++        """
++        parent = Parent.objects.create(name="Test Parent")
++        child_active = Child.objects.create(
++            name="Active Child", parent=parent, is_active=True
++        )
++        child_inactive = Child.objects.create(
++            name="Inactive Child", parent=parent, is_active=False
++        )
++
++        class GrandChildAdmin(admin.ModelAdmin):
++            list_display = ["name", "parent__is_active"]
++
++        GrandChild.objects.create(name="GrandChild of Active", parent=child_active)
++        GrandChild.objects.create(name="GrandChild of Inactive", parent=child_inactive)
++
++        m = GrandChildAdmin(GrandChild, custom_site)
++        request = self._mocked_authenticated_request("/grandchild/", self.superuser)
++        response = m.changelist_view(request)
++
++        # Boolean icons are rendered using img tags with specific alt text.
++        self.assertContains(response, 'alt="True"')
++        self.assertContains(response, 'alt="False"')
++        # Ensure "True" and "False" text are NOT in the response.
++        self.assertNotContains(response, ">True<")
++        self.assertNotContains(response, ">False<")
++
+ 
+ class GetAdminLogTests(TestCase):
+     def test_custom_user_pk_not_named_id(self):

@@ -1,0 +1,84 @@
+commit cef2346abf8d6e9e61a5a3599fbcf72163e6a6e5
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Tue Jul 28 23:37:14 2026 -0400
+
+    Fixed #37239 -- Cleared stale db_default when pk comes from related object.
+
+diff --git a/tests/field_defaults/models.py b/tests/field_defaults/models.py
+index 4275564113..e2b2ac4870 100644
+--- a/tests/field_defaults/models.py
++++ b/tests/field_defaults/models.py
+@@ -13,7 +13,7 @@ from datetime import datetime
+ from decimal import Decimal
+ 
+ from django.db import models
+-from django.db.models.functions import Coalesce, ExtractYear, Now, Pi
++from django.db.models.functions import UUID4, Coalesce, ExtractYear, Now, Pi
+ from django.db.models.lookups import GreaterThan
+ 
+ 
+@@ -78,3 +78,23 @@ class DBDefaultsOneToOnePK(models.Model):
+         db_default="kr",
+         on_delete=models.CASCADE,
+     )
++
++
++class DBDefaultsFunctionPK(models.Model):
++    uuid = models.UUIDField(primary_key=True, db_default=UUID4())
++
++    class Meta:
++        required_db_features = {
++            "supports_uuid4_function_in_default",
++            "supports_expression_defaults",
++        }
++
++
++class DBDefaultsFunctionFK(models.Model):
++    parent = models.ForeignKey(DBDefaultsFunctionPK, models.CASCADE)
++
++    class Meta:
++        required_db_features = {
++            "supports_uuid4_function_in_default",
++            "supports_expression_defaults",
++        }
+diff --git a/tests/field_defaults/tests.py b/tests/field_defaults/tests.py
+index dd92b9ad44..7343015ea0 100644
+--- a/tests/field_defaults/tests.py
++++ b/tests/field_defaults/tests.py
+@@ -13,7 +13,7 @@ from django.db.models.expressions import (
+     OrderByList,
+     RawSQL,
+ )
+-from django.db.models.functions import Collate
++from django.db.models.functions import UUID4, Collate
+ from django.db.models.lookups import GreaterThan
+ from django.test import SimpleTestCase, TestCase, skipUnlessDBFeature
+ 
+@@ -23,6 +23,8 @@ from .models import (
+     DBDefaults,
+     DBDefaultsFK,
+     DBDefaultsFunction,
++    DBDefaultsFunctionFK,
++    DBDefaultsFunctionPK,
+     DBDefaultsOneToOnePK,
+     DBDefaultsPK,
+ )
+@@ -155,6 +157,18 @@ class DefaultTests(TestCase):
+         # DatabaseDefault is used, but this behavior varies across databases.
+         self.assertNotEqual(obj.language_code_id, "tr")
+ 
++    @skipUnlessDBFeature(
++        "can_return_columns_from_insert",
++        "supports_expression_defaults",
++        "supports_uuid4_function_in_default",
++    )
++    def test_foreign_key_to_parent_with_expression_pk(self):
++        parent = DBDefaultsFunctionPK(pk=UUID4())
++        obj = DBDefaultsFunctionFK(parent=parent)
++        parent.save()
++        obj.save()
++        self.assertEqual(obj.parent_id, parent.pk)
++
+     @skipUnlessDBFeature("supports_expression_defaults")
+     def test_case_when_db_default_returning(self):
+         m = DBDefaultsFunction.objects.create()

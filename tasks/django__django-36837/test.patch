@@ -1,0 +1,58 @@
+commit dc4e5461faa390991e6a0f6d3ca47690e8f5c4e1
+Author: Sezer BOZKIR <admin@sezerbozkir.com>
+Date:   Tue Apr 7 11:20:16 2026 +0300
+
+    Fixed #36837 -- Skipped backends not implementing (a)get_user() in (a)force_login().
+    
+    Co-authored-by: Mykhailo Havelia <Arfey17.mg@gmail.com>
+
+diff --git a/tests/test_client/auth_backends.py b/tests/test_client/auth_backends.py
+index 97a2763aaa..a20b0be4de 100644
+--- a/tests/test_client/auth_backends.py
++++ b/tests/test_client/auth_backends.py
+@@ -1,4 +1,4 @@
+-from django.contrib.auth.backends import ModelBackend
++from django.contrib.auth.backends import BaseBackend, ModelBackend
+ 
+ 
+ class TestClientBackend(ModelBackend):
+@@ -7,3 +7,9 @@ class TestClientBackend(ModelBackend):
+ 
+ class BackendWithoutGetUserMethod:
+     pass
++
++
++class PermissionOnlyBackend(BaseBackend):
++    """This class inherits from BaseBackend but does not implement get_user."""
++
++    pass
+diff --git a/tests/test_client/tests.py b/tests/test_client/tests.py
+index bc1472d88b..2ba9455d0c 100644
+--- a/tests/test_client/tests.py
++++ b/tests/test_client/tests.py
+@@ -794,6 +794,25 @@ class ClientTest(TestCase):
+         self.client.force_login(self.u1)
+         self.assertEqual(self.u1.backend, "django.contrib.auth.backends.ModelBackend")
+ 
++    @override_settings(
++        AUTHENTICATION_BACKENDS=[
++            "test_client.auth_backends.PermissionOnlyBackend",
++            "django.contrib.auth.backends.ModelBackend",
++        ]
++    )
++    def test_force_login_skips_noop_get_user_backend(self):
++        """force_login() skips auth backends without concrete get_user()."""
++        self.client.force_login(self.u1)
++        self.assertEqual(self.u1.backend, "django.contrib.auth.backends.ModelBackend")
++
++    @override_settings(
++        AUTHENTICATION_BACKENDS=[
++            "test_client.auth_backends.PermissionOnlyBackend",
++        ]
++    )
++    def test_force_login_all_backends_noop(self):
++        self.assertIsNone(self.client._get_backend())
++
+     @override_settings(SESSION_ENGINE="django.contrib.sessions.backends.signed_cookies")
+     def test_logout_cookie_sessions(self):
+         self.test_logout()

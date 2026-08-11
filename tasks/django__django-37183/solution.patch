@@ -1,0 +1,77 @@
+commit 67c407585ccdc01b76d78e33c082f23d46346747
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Tue Jun 23 12:13:40 2026 -0400
+
+    Fixed #37183 -- Prevented writing control characters into XML attributes.
+    
+    `SimplerXMLGenerator` already rejected control characters (unsupported
+    in XML 1.0) in element content, but attribute values were written
+    unchecked, so unsanitized input could still produce an unparseable
+    XML document. The existing check now runs over attribute values in
+    `startElement()`. This covers both syndication feeds, where item data
+    may flow into attributes such as `Atom` category terms, and the XML
+    serializer, which wraps the error to identify the offending object.
+
+diff --git a/django/core/serializers/xml_serializer.py b/django/core/serializers/xml_serializer.py
+index 366e077c78..b3725e9748 100644
+--- a/django/core/serializers/xml_serializer.py
++++ b/django/core/serializers/xml_serializer.py
+@@ -63,7 +63,13 @@ class Serializer(base.Serializer):
+             if obj_pk is not None:
+                 attrs["pk"] = obj._meta.pk.value_to_string(obj)
+ 
+-        self.xml.startElement("object", attrs)
++        try:
++            self.xml.startElement("object", attrs)
++        except UnserializableContentError:
++            raise ValueError(
++                "%s (pk:%s) contains unserializable characters"
++                % (obj.__class__.__name__, obj.pk)
++            )
+ 
+     def end_object(self, obj):
+         """
+diff --git a/django/utils/xmlutils.py b/django/utils/xmlutils.py
+index 5c65e580ed..bc35e0609d 100644
+--- a/django/utils/xmlutils.py
++++ b/django/utils/xmlutils.py
+@@ -2,12 +2,16 @@
+ Utilities for XML generation/parsing.
+ """
+ 
+-import re
+ from xml.sax.saxutils import XMLGenerator
+ 
++from django.utils.regex_helper import _lazy_re_compile
++
++_xml_control_chars_re = _lazy_re_compile(r"[\x00-\x08\x0B-\x0C\x0E-\x1F]")
++
+ 
+ class UnserializableContentError(ValueError):
+-    pass
++    def __init__(self, msg="Control characters are not supported in XML 1.0"):
++        super().__init__(msg)
+ 
+ 
+ class SimplerXMLGenerator(XMLGenerator):
+@@ -21,15 +25,16 @@ class SimplerXMLGenerator(XMLGenerator):
+         self.endElement(name)
+ 
+     def characters(self, content):
+-        if content and re.search(r"[\x00-\x08\x0B-\x0C\x0E-\x1F]", content):
++        if content and _xml_control_chars_re.search(content):
+             # Fail loudly when content has control chars (unsupported in XML
+             # 1.0) See https://www.w3.org/International/questions/qa-controls
+-            raise UnserializableContentError(
+-                "Control characters are not supported in XML 1.0"
+-            )
++            raise UnserializableContentError
+         XMLGenerator.characters(self, content)
+ 
+     def startElement(self, name, attrs):
++        for value in attrs.values():
++            if isinstance(value, str) and _xml_control_chars_re.search(value):
++                raise UnserializableContentError
+         # Sort attrs for a deterministic output.
+         sorted_attrs = dict(sorted(attrs.items())) if attrs else attrs
+         super().startElement(name, sorted_attrs)

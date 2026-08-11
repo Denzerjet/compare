@@ -1,0 +1,22 @@
+commit 3b161e60964aff99eddcd2627a486d81c1836b3a
+Author: varunkasyap <varunkasyap@hotmail.com>
+Date:   Thu Apr 2 14:56:45 2026 +0530
+
+    Fixed #37016 -- Avoided propagating invalid arguments from When() to Q().
+
+diff --git a/tests/expressions_case/tests.py b/tests/expressions_case/tests.py
+index 8704a7b991..1fde24f149 100644
+--- a/tests/expressions_case/tests.py
++++ b/tests/expressions_case/tests.py
+@@ -1668,6 +1668,11 @@ class CaseWhenTests(SimpleTestCase):
+         with self.assertRaisesMessage(TypeError, msg):
+             When()
+ 
++    def test_when_rejects_invalid_arguments(self):
++        msg = "The following kwargs are invalid: '_connector', '_negated'"
++        with self.assertRaisesMessage(TypeError, msg):
++            When(_negated=True, _connector="evil")
++
+     def test_empty_q_object(self):
+         msg = "An empty Q() can't be used as a When() condition."
+         with self.assertRaisesMessage(ValueError, msg):

@@ -1,0 +1,34 @@
+commit 33bfc66add643f49d466c5a646989ad91677753d
+Author: Tim Graham <timograham@gmail.com>
+Date:   Sat Apr 4 18:02:17 2026 -0400
+
+    Fixed #37023 -- Made XML serializer put each ManyToManyField object on its own line.
+
+diff --git a/django/core/serializers/xml_serializer.py b/django/core/serializers/xml_serializer.py
+index 82a345d57f..5dfbb76a01 100644
+--- a/django/core/serializers/xml_serializer.py
++++ b/django/core/serializers/xml_serializer.py
+@@ -199,6 +199,8 @@ class Serializer(base.Serializer):
+             else:
+ 
+                 def handle_m2m(value):
++                    # Put each object on its own line.
++                    self.indent(self.indent_level + 1)
+                     self.xml.addQuickElement("object", attrs={"pk": str(value.pk)})
+ 
+                 def queryset_iterator(obj, field):
+@@ -217,9 +219,13 @@ class Serializer(base.Serializer):
+                 field.name,
+                 queryset_iterator(obj, field),
+             )
++            relobj = None
+             for relobj in m2m_iter:
+                 handle_m2m(relobj)
+-
++            if relobj:
++                # If there are related objects (which appear each on their own
++                # line), put the closing </field> on the next line.
++                self.indent(self.indent_level)
+             self.xml.endElement("field")
+             self.indent_level -= 1
+ 

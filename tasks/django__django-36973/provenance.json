@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "fcf916884d25ed430bd7cedaea2b10035c2aa3b6",
+  "base_commit": "04bcc9913319e50b376a27c29cf9aa4e7b8247bf",
+  "commit_date": "2026-04-02",
+  "subject": "Fixed #36973 -- Made fields.E348 check detect further clashes between managers and related_names.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36973",
+  "source_files": [
+    "django/db/models/fields/related.py"
+  ],
+  "test_files": [
+    "tests/invalid_models_tests/test_relative_fields.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.0.4.txt"
+  ],
+  "full_test_labels": [
+    "invalid_models_tests.test_relative_fields"
+  ],
+  "narrowed_test_labels": [
+    "invalid_models_tests.test_relative_fields"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.47,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

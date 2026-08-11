@@ -1,0 +1,23 @@
+commit 9465349120ef8a0b0689e12bcbfd05f3d173ebdf
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Tue Jul 28 17:57:55 2026 -0400
+
+    Fixed #37238 -- Prevented fallback to python default for a pk with a db_default.
+    
+    Regression in a2348c85fc6c20087935c74cd99340dd4ef2dcdc.
+
+diff --git a/django/db/models/base.py b/django/db/models/base.py
+index 32ddfc4f54..7b7a8833cc 100644
+--- a/django/db/models/base.py
++++ b/django/db/models/base.py
+@@ -1094,7 +1094,9 @@ class Model(AltersData, metaclass=ModelBase):
+                 if f.name in update_fields or f.attname in update_fields
+             ]
+ 
+-        if not self._is_pk_set(meta):
++        if not self._is_pk_set(meta) and not isinstance(
++            getattr(self, meta.pk.attname), DatabaseDefault
++        ):
+             pk_val = meta.pk.get_pk_value_on_save(self)
+             setattr(self, meta.pk.attname, pk_val)
+         pk_set = self._is_pk_set(meta)

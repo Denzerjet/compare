@@ -1,0 +1,40 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "a284a49153f005f2a7af087025e5112ba06cbd5f",
+  "base_commit": "d33364c7ba330a349e38449c98494323a4ed7c8d",
+  "commit_date": "2026-04-19",
+  "subject": "Fixed #37047 -- Fixed crash in Query.orderby_issubset_groupby for descending and random order_by strings.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37047",
+  "source_files": [
+    "django/db/models/sql/query.py"
+  ],
+  "test_files": [
+    "tests/aggregation_regress/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "aggregation_regress.tests"
+  ],
+  "narrowed_test_labels": [
+    "aggregation_regress.tests"
+  ],
+  "skipped_tests": [
+    "aggregation_regress.tests.AggregationTests.test_aggregate_duplicate_columns",
+    "aggregation_regress.tests.AggregationTests.test_aggregate_duplicate_columns_only",
+    "aggregation_regress.tests.AggregationTests.test_aggregate_duplicate_columns_select_related",
+    "aggregation_regress.tests.AggregationTests.test_aggregate_unmanaged_model_as_tables",
+    "aggregation_regress.tests.AggregationTests.test_aggregate_unmanaged_model_columns"
+  ],
+  "graded_runtime_sec": 1.52,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

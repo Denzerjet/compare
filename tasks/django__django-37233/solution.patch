@@ -1,0 +1,21 @@
+commit 92e1d9e3619ae5274a64b38f26177064486892f2
+Author: Akshat Sparsh <akshatsparsh@gmail.com>
+Date:   Mon Jul 27 17:21:11 2026 +0530
+
+    Fixed #37233 -- Prevented sort controls for unordered __str__ admin columns.
+
+diff --git a/django/contrib/admin/templatetags/admin_list.py b/django/contrib/admin/templatetags/admin_list.py
+index aafbae9d90..211a2533b3 100644
+--- a/django/contrib/admin/templatetags/admin_list.py
++++ b/django/contrib/admin/templatetags/admin_list.py
+@@ -116,7 +116,9 @@ def result_headers(cl):
+             # Set ordering for attr that is a property, if defined.
+             if isinstance(attr, property) and hasattr(attr, "fget"):
+                 admin_order_field = getattr(attr.fget, "admin_order_field", None)
+-            if not admin_order_field and LOOKUP_SEP not in field_name:
++            if not admin_order_field and not (
++                LOOKUP_SEP in field_name and isinstance(attr, models.Field)
++            ):
+                 is_field_sortable = False
+ 
+         if not is_field_sortable:

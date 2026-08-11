@@ -1,0 +1,104 @@
+commit e27f23b268c520957384054fb236cfc303f95f51
+Author: Nilesh Kumar Pahari <nileshpahari@protonmail.com>
+Date:   Mon Apr 6 23:48:30 2026 +0530
+
+    Fixed #36816 -- Allowed **kwargs in @task decorator.
+    
+    The decorator was updated to accept **kwargs and forward them to
+    task_class, allowing additional parameters to be passed to custom
+    Task subclasses.
+
+diff --git a/tests/tasks/test_custom_backend.py b/tests/tasks/test_custom_backend.py
+index c8508d5d3b..f3851622ed 100644
+--- a/tests/tasks/test_custom_backend.py
++++ b/tests/tasks/test_custom_backend.py
+@@ -1,7 +1,8 @@
+ import logging
++from dataclasses import dataclass
+ from unittest import mock
+ 
+-from django.tasks import default_task_backend, task_backends
++from django.tasks import Task, default_task_backend, task, task_backends
+ from django.tasks.backends.base import BaseTaskBackend
+ from django.tasks.exceptions import InvalidTask
+ from django.test import SimpleTestCase, override_settings
+@@ -23,6 +24,20 @@ class CustomBackendNoEnqueue(BaseTaskBackend):
+     pass
+ 
+ 
++@dataclass(frozen=True, slots=True, kw_only=True)
++class CustomTask(Task):
++    foo: int = 3
++    bar: int = 300
++
++
++class CustomTaskBackend(BaseTaskBackend):
++    task_class = CustomTask
++    supports_priority = True
++
++    def enqueue(self, task, args, kwargs):
++        pass
++
++
+ @override_settings(
+     TASKS={
+         "default": {
+@@ -68,3 +83,45 @@ class CustomBackendTestCase(SimpleTestCase):
+             "without an implementation for abstract method 'enqueue'",
+         ):
+             test_tasks.noop_task.using(backend="no_enqueue")
++
++
++@override_settings(
++    TASKS={
++        "default": {
++            "BACKEND": f"{CustomTaskBackend.__module__}."
++            f"{CustomTaskBackend.__qualname__}",
++            "QUEUES": ["default", "high"],
++        },
++    }
++)
++class CustomTaskTestCase(SimpleTestCase):
++    def test_custom_task_default_values(self):
++        my_task = task()(test_tasks.noop_task.func)
++
++        self.assertIsInstance(my_task, CustomTask)
++        self.assertEqual(my_task.foo, 3)
++        self.assertEqual(my_task.bar, 300)
++
++    def test_custom_task_with_custom_values(self):
++        my_task = task(foo=5, bar=600)(test_tasks.noop_task.func)
++
++        self.assertIsInstance(my_task, CustomTask)
++        self.assertEqual(my_task.foo, 5)
++        self.assertEqual(my_task.bar, 600)
++
++    def test_custom_task_with_standard_and_custom_values(self):
++        my_task = task(priority=10, queue_name="high", foo=10, bar=1000)(
++            test_tasks.noop_task.func
++        )
++
++        self.assertIsInstance(my_task, CustomTask)
++        self.assertEqual(my_task.priority, 10)
++        self.assertEqual(my_task.queue_name, "high")
++        self.assertEqual(my_task.foo, 10)
++        self.assertEqual(my_task.bar, 1000)
++        self.assertFalse(my_task.takes_context)
++        self.assertIsNone(my_task.run_after)
++
++    def test_custom_task_invalid_kwarg(self):
++        with self.assertRaises(TypeError):
++            task(unknown_param=123)(test_tasks.noop_task.func)
+diff --git a/tests/tasks/test_tasks.py b/tests/tasks/test_tasks.py
+index 14d47c4cf6..b66c2df058 100644
+--- a/tests/tasks/test_tasks.py
++++ b/tests/tasks/test_tasks.py
+@@ -312,3 +312,8 @@ class TaskTestCase(SimpleTestCase):
+             "Task takes context but does not have a first argument of 'context'.",
+         ):
+             task(takes_context=True)(test_tasks.calculate_meaning_of_life.func)
++
++    def test_run_after_in_decorator(self):
++        msg = "run_after cannot be defined statically with the @task decorator."
++        with self.assertRaisesMessage(TypeError, msg):
++            task(run_after=timezone.now())(test_tasks.calculate_meaning_of_life.func)

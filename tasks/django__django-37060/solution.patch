@@ -1,0 +1,67 @@
+commit 21c51c2623a966ba1ad8fd10e36bc8bbec93b70e
+Author: Andrea Zanotto <andrea.zanotto@zoppas.com>
+Date:   Thu Apr 23 11:20:58 2026 +0200
+
+    Fixed #37060 -- Propagated AlterField through attname-based to_field references.
+    
+    Schema dependency discovery treated to_field values as raw field names, so attname aliases such as "primary_id" were not matched to the underlying relation field "primary". As a result, AlterField on a unique target field updated direct dependencies but missed transitive attname-based references.
+    Resolved the dependency matching by comparing resolved remote fields rather than only field names, and updated SQLite's related-table rebuild path to use the same recursive dependency discovery.
+    Added a regression test covering a transitive relation chain where
+    ForeignKey(..., to_field="primary_id") must widen along with the unique leaf field it ultimately references.
+
+diff --git a/django/db/backends/base/schema.py b/django/db/backends/base/schema.py
+index c465668120..af30f7f7fc 100644
+--- a/django/db/backends/base/schema.py
++++ b/django/db/backends/base/schema.py
+@@ -36,7 +36,10 @@ def _is_relevant_relation(relation, altered_field):
+         # Foreign key constraint on the primary key, which is being altered.
+         return True
+     # Is the constraint targeting the field being altered?
+-    return altered_field.name in field.to_fields
++    return (
++        altered_field.name in field.to_fields
++        or altered_field.attname in field.to_fields
++    )
+ 
+ 
+ def _all_related_fields(model):
+diff --git a/django/db/backends/sqlite3/schema.py b/django/db/backends/sqlite3/schema.py
+index ee6163c253..94e3fc5bc7 100644
+--- a/django/db/backends/sqlite3/schema.py
++++ b/django/db/backends/sqlite3/schema.py
+@@ -3,7 +3,10 @@ from decimal import Decimal
+ 
+ from django.apps.registry import Apps
+ from django.db import NotSupportedError
+-from django.db.backends.base.schema import BaseDatabaseSchemaEditor
++from django.db.backends.base.schema import (
++    BaseDatabaseSchemaEditor,
++    _related_non_m2m_objects,
++)
+ from django.db.backends.ddl_references import Statement
+ from django.db.backends.utils import strip_quotes
+ from django.db.models import CompositePrimaryKey, UniqueConstraint
+@@ -391,17 +394,13 @@ class DatabaseSchemaEditor(BaseDatabaseSchemaEditor):
+         if new_field.unique and (
+             old_type != new_type or old_collation != new_collation
+         ):
+-            related_models = set()
+-            opts = new_field.model._meta
+-            for remote_field in opts.related_objects:
++            related_models = {
++                rel.related_model
++                for _, rel in _related_non_m2m_objects(old_field, new_field)
+                 # Ignore self-relationship since the table was already rebuilt.
+-                if remote_field.related_model == model:
+-                    continue
+-                if not remote_field.many_to_many:
+-                    if remote_field.field_name == new_field.name:
+-                        related_models.add(remote_field.related_model)
+-                elif new_field.primary_key and remote_field.through._meta.auto_created:
+-                    related_models.add(remote_field.through)
++                if rel.related_model != model
++            }
++            opts = new_field.model._meta
+             if new_field.primary_key:
+                 for many_to_many in opts.many_to_many:
+                     # Ignore self-relationship since the table was already

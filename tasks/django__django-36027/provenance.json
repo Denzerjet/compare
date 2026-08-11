@@ -1,0 +1,41 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "6fc8150005256db2052b01812d65dff737563a1b",
+  "base_commit": "2a5da9d00555beef8e5f6307cfcbfc029d45491e",
+  "commit_date": "2026-07-23",
+  "subject": "Fixed #36027 -- Made error response rendering thread-sensitive.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36027",
+  "source_files": [
+    "django/contrib/staticfiles/handlers.py",
+    "django/core/handlers/exception.py"
+  ],
+  "test_files": [
+    "tests/asgi/tests.py",
+    "tests/asgi/urls.py",
+    "tests/staticfiles_tests/test_handlers.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.2.txt"
+  ],
+  "full_test_labels": [
+    "asgi.tests",
+    "staticfiles_tests.test_handlers"
+  ],
+  "narrowed_test_labels": [
+    "asgi.tests",
+    "staticfiles_tests.test_handlers"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 10.57,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

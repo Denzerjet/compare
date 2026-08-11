@@ -1,0 +1,22 @@
+commit e2abe321a6f1370e05c1a89a742125c9eafcac8c
+Author: mariatta <mariatta.wijaya@gmail.com>
+Date:   Fri Apr 3 11:44:02 2026 -0700
+
+    Fixed #37021 -- Added Permission.user_perm_str property.
+    
+    For use in checking user permissions via has_perm().
+    
+    Co-authored-by: 사재혁 <jaehyuck.sa.dev@gmail.com>
+
+diff --git a/tests/auth_tests/test_models.py b/tests/auth_tests/test_models.py
+index a3e7a3205b..fd99b970d7 100644
+--- a/tests/auth_tests/test_models.py
++++ b/tests/auth_tests/test_models.py
+@@ -635,3 +635,7 @@ class PermissionTests(TestCase):
+         self.assertEqual(
+             str(p), "Auth_Tests | custom email field | Can view custom email field"
+         )
++
++    def test_user_perm_str(self):
++        p = Permission.objects.get(codename="view_customemailfield")
++        self.assertEqual(p.user_perm_str, "auth_tests.view_customemailfield")

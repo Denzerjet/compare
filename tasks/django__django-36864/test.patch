@@ -1,0 +1,110 @@
+commit 65a9f14196c338d70889bd54753370606b3fb4eb
+Author: Leland <lboeman@arizona.edu>
+Date:   Mon May 18 15:32:12 2026 -0700
+
+    Fixed #36864 -- Supported modules and submodules in import_string().
+    
+    Before, only submodules worked (and only if already imported). Now,
+    all modules work regardless of prior import state.
+    
+    Updated expected exception in auth tests where import_string() returns
+    a non-callable.
+
+diff --git a/tests/auth_tests/test_models.py b/tests/auth_tests/test_models.py
+index 6155cc92f5..17b2fd2e57 100644
+--- a/tests/auth_tests/test_models.py
++++ b/tests/auth_tests/test_models.py
+@@ -464,7 +464,7 @@ class UserWithPermTestCase(TestCase):
+             )
+ 
+     def test_invalid_backend_submodule(self):
+-        with self.assertRaises(ImportError):
++        with self.assertRaises(TypeError):
+             User.objects.with_perm(
+                 "auth.test",
+                 backend="json.tool",
+diff --git a/tests/auth_tests/test_validators.py b/tests/auth_tests/test_validators.py
+index 3ce2611633..7b0979b421 100644
+--- a/tests/auth_tests/test_validators.py
++++ b/tests/auth_tests/test_validators.py
+@@ -51,10 +51,19 @@ class PasswordValidationTest(SimpleTestCase):
+ 
+         self.assertEqual(get_password_validators([]), [])
+ 
+-    def test_get_password_validators_custom_invalid(self):
++    def test_get_password_validators_custom_nonexistent(self):
++        validator_config = [{"NAME": "does.not.exist"}]
++        msg = (
++            "The module in NAME could not be imported: does.not.exist. "
++            "Check your AUTH_PASSWORD_VALIDATORS setting."
++        )
++        with self.assertRaisesMessage(ImproperlyConfigured, msg):
++            get_password_validators(validator_config)
++
++    def test_get_password_validators_custom_uncallable(self):
+         validator_config = [{"NAME": "json.tool"}]
+         msg = (
+-            "The module in NAME could not be imported: json.tool. "
++            "The configured validator in NAME is not callable: json.tool. "
+             "Check your AUTH_PASSWORD_VALIDATORS setting."
+         )
+         with self.assertRaisesMessage(ImproperlyConfigured, msg):
+diff --git a/tests/utils_tests/test_module/collision/__init__.py b/tests/utils_tests/test_module/collision/__init__.py
+new file mode 100644
+index 0000000000..af53ce1fae
+--- /dev/null
++++ b/tests/utils_tests/test_module/collision/__init__.py
+@@ -0,0 +1 @@
++collider = "I'm an object"
+diff --git a/tests/utils_tests/test_module/collision/collider.py b/tests/utils_tests/test_module/collision/collider.py
+new file mode 100644
+index 0000000000..15a2e82911
+--- /dev/null
++++ b/tests/utils_tests/test_module/collision/collider.py
+@@ -0,0 +1 @@
++content = "In the collider submodule"
+diff --git a/tests/utils_tests/test_module_loading.py b/tests/utils_tests/test_module_loading.py
+index 80ada3abd7..7752da19b9 100644
+--- a/tests/utils_tests/test_module_loading.py
++++ b/tests/utils_tests/test_module_loading.py
+@@ -135,10 +135,39 @@ class ModuleImportTests(SimpleTestCase):
+ 
+         # Test exceptions raised
+         with self.assertRaises(ImportError):
+-            import_string("no_dots_in_path")
++            import_string("does_not_exist")
+         msg = 'Module "utils_tests" does not define a "unexistent" attribute'
+         with self.assertRaisesMessage(ImportError, msg):
+             import_string("utils_tests.unexistent")
++        msg = (
++            'Module "utils_tests.test_module" does not define a "unexistent" attribute'
++        )
++        with self.assertRaisesMessage(ImportError, msg):
++            import_string("utils_tests.test_module.unexistent")
++
++    def test_import_string_objects_collision_handling(self):
++        collision_dotpath = "utils_tests.test_module.collision.collider"
++        self.addCleanup(sys.modules.pop, collision_dotpath, None)
++
++        # When there is a name collision between __init__-defined variables and
++        # submodules, we get back the submodule.
++        cls = import_string(collision_dotpath)
++        mod = import_module(collision_dotpath)
++        self.assertEqual(mod, cls)
++
++    def test_import_string_unloaded_module(self):
++        module_dotpath = "utils_tests"
++        self.addCleanup(sys.modules.pop, module_dotpath, None)
++        import_string(module_dotpath)
++
++    def test_import_string_unloaded_submodule(self):
++        submodule_dotpath = "utils_tests.test_module.good_module"
++        self.addCleanup(sys.modules.pop, submodule_dotpath, None)
++        import_string(submodule_dotpath)
++
++    def test_import_string_empty(self):
++        with self.assertRaisesMessage(ValueError, "Empty module name"):
++            import_string("")
+ 
+ 
+ @modify_settings(INSTALLED_APPS={"append": "utils_tests.test_module"})

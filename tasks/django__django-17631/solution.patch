@@ -1,0 +1,27 @@
+commit 7ab2d803533dd3ffe310055414ad584cfbbf0bea
+Author: anurag629 <akvermaav629@gmail.com>
+Date:   Tue Mar 17 22:17:31 2026 +0530
+
+    Fixed #17631 -- Handled fields and files with the same name in encode_multipart().
+    
+    When data is a MultiValueDict, encode_multipart() now uses data.lists()
+    instead of data.items() to preserve all values per key. Previously, only
+    the last value for each key was encoded, silently dropping form field
+    values when a file upload shared the same name.
+
+diff --git a/django/test/client.py b/django/test/client.py
+index d499045363..d13bc28fc6 100644
+--- a/django/test/client.py
++++ b/django/test/client.py
+@@ -295,7 +295,10 @@ def encode_multipart(boundary, data):
+     # Each bit of the multipart form data could be either a form value or a
+     # file, or a *list* of form values and/or files. Remember that HTTP field
+     # names can be duplicated!
+-    for key, value in data.items():
++    # Use lists() if data is a MultiValueDict, so that all values for a key
++    # are preserved (e.g. a form field and a file sharing the same name).
++    raw_data = getattr(data, "lists", data.items)()
++    for key, value in raw_data:
+         if value is None:
+             raise TypeError(
+                 "Cannot encode None for key '%s' as POST data. Did you mean "

@@ -1,0 +1,25 @@
+commit ca14173f968cf36115f22d6c6785f738de4391ed
+Author: SEPURI-SAI-KRISHNA <saik20533@gmail.com>
+Date:   Thu Jul 30 11:52:50 2026 +0530
+
+    Fixed #37240 -- Fixed simplify_regex() with multiple unnamed groups.
+
+diff --git a/django/urls/utils.py b/django/urls/utils.py
+index 59a0ae6e95..af3f813fbe 100644
+--- a/django/urls/utils.py
++++ b/django/urls/utils.py
+@@ -136,12 +136,11 @@ def replace_unnamed_groups(pattern):
+     2. ^(?P<a>\w+)/b/((x|y)\w+)$ ==> ^(?P<a>\w+)/b/<var>$
+     3. ^(?P<a>\w+)/b/(\w+) ==> ^(?P<a>\w+)/b/<var>
+     4. ^(?P<a>\w+)/b/((x|y)\w+) ==> ^(?P<a>\w+)/b/<var>
++    5. ^(\w+)/b/(\w+)$ ==> ^<var>/b/<var>$
+     """
+     final_pattern, prev_end = "", None
+     for start, end, _ignored in _find_groups(pattern, _UNNAMED_GROUP_MATCHER):
+-        if prev_end:
+-            final_pattern += pattern[prev_end:start]
+-        final_pattern += pattern[:start] + "<var>"
++        final_pattern += pattern[prev_end:start] + "<var>"
+         prev_end = end
+     return final_pattern + pattern[prev_end:]
+ 

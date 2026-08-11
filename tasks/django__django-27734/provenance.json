@@ -1,0 +1,39 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "06463d3c11b3ce132075283d5f9368a269d66343",
+  "base_commit": "2b0e08a149b2036352684b8247f35c031cf61504",
+  "commit_date": "2026-07-31",
+  "subject": "Fixed #27734 -- Made parallel test workers reuse database clones of exited workers.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/27734",
+  "source_files": [
+    "django/test/runner.py"
+  ],
+  "test_files": [
+    "tests/test_runner/test_parallel.py",
+    "tests/test_runner/tests.py"
+  ],
+  "dropped_files": [
+    "AUTHORS"
+  ],
+  "full_test_labels": [
+    "test_runner.test_parallel",
+    "test_runner.tests"
+  ],
+  "narrowed_test_labels": [
+    "test_runner.test_parallel",
+    "test_runner.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 9.37,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

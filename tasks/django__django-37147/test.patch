@@ -1,0 +1,24 @@
+commit 71af23d1f4678c4bf052e051d72e8928e1697de3
+Author: Mariusz Felisiak <felisiak.mariusz@gmail.com>
+Date:   Tue Jun 9 13:12:29 2026 +0200
+
+    Fixed #37147 -- Fixed rendering empty values for models with db_default on primary key.
+
+diff --git a/tests/forms_tests/widget_tests/test_widget.py b/tests/forms_tests/widget_tests/test_widget.py
+index 9e243570d7..32e5e38f59 100644
+--- a/tests/forms_tests/widget_tests/test_widget.py
++++ b/tests/forms_tests/widget_tests/test_widget.py
+@@ -1,3 +1,5 @@
++from django.db.models import Value
++from django.db.models.expressions import DatabaseDefault
+ from django.forms import Widget
+ from django.forms.widgets import Input
+ 
+@@ -9,6 +11,7 @@ class WidgetTests(WidgetTest):
+         widget = Widget()
+         self.assertIsNone(widget.format_value(None))
+         self.assertIsNone(widget.format_value(""))
++        self.assertIsNone(widget.format_value(DatabaseDefault(Value("1"))))
+         self.assertEqual(widget.format_value("español"), "español")
+         self.assertEqual(widget.format_value(42.5), "42.5")
+ 

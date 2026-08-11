@@ -1,0 +1,23 @@
+commit 8acd000725838f73c5e6781114f11866f6674c46
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Thu Jun 18 14:22:54 2026 -0400
+
+    Fixed #37174 -- Used netstring delimiter between vary on arguments for cached template fragments.
+    
+    This algorithm used a delimiter, but because it didn't use a length,
+    argument values containing the delimiter could still cause collisions.
+
+diff --git a/django/core/cache/utils.py b/django/core/cache/utils.py
+index 87f0f9cb09..9c18dc8fb7 100644
+--- a/django/core/cache/utils.py
++++ b/django/core/cache/utils.py
+@@ -7,6 +7,7 @@ def make_template_fragment_key(fragment_name, vary_on=None):
+     hasher = md5(usedforsecurity=False)
+     if vary_on is not None:
+         for arg in vary_on:
+-            hasher.update(str(arg).encode())
+-            hasher.update(b":")
++            data = str(arg).encode()
++            # Use the netstring delimiter (with trailing comma).
++            hasher.update(b"%d:%s," % (len(data), data))
+     return TEMPLATE_FRAGMENT_KEY_TEMPLATE % (fragment_name, hasher.hexdigest())

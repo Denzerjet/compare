@@ -1,0 +1,19 @@
+commit 189c2d2ce58482db5c09d8b1e1464d1456dc9bab
+Author: Adam Johnson <me@adamj.eu>
+Date:   Fri Jun 12 00:33:05 2026 +0200
+
+    Fixed #37164 -- Supported subclasses’ _get_lines() in jsonl Deserializer.
+
+diff --git a/django/core/serializers/jsonl.py b/django/core/serializers/jsonl.py
+index 7bc9bed79f..c9aa0d0879 100644
+--- a/django/core/serializers/jsonl.py
++++ b/django/core/serializers/jsonl.py
+@@ -47,7 +47,7 @@ class Deserializer(PythonDeserializer):
+             stream_or_string = stream_or_string.decode()
+         if isinstance(stream_or_string, str):
+             stream_or_string = stream_or_string.splitlines()
+-        super().__init__(Deserializer._get_lines(stream_or_string), **options)
++        super().__init__(self._get_lines(stream_or_string), **options)
+ 
+     def _handle_object(self, obj):
+         try:

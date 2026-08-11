@@ -1,0 +1,40 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "67c407585ccdc01b76d78e33c082f23d46346747",
+  "base_commit": "9dce456105e8e182dde6db4774ced79b222a68f9",
+  "commit_date": "2026-06-24",
+  "subject": "Fixed #37183 -- Prevented writing control characters into XML attributes.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37183",
+  "source_files": [
+    "django/utils/xmlutils.py",
+    "django/core/serializers/xml_serializer.py"
+  ],
+  "test_files": [
+    "tests/serializers/test_xml.py",
+    "tests/syndication_tests/feeds.py",
+    "tests/syndication_tests/tests.py",
+    "tests/syndication_tests/urls.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "serializers.test_xml",
+    "syndication_tests.tests"
+  ],
+  "narrowed_test_labels": [
+    "serializers.test_xml",
+    "syndication_tests.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.68,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

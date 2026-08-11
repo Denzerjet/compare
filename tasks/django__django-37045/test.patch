@@ -1,0 +1,53 @@
+commit 20960df455fffd73d556a5ed92cdf6832c23e65f
+Author: Samuel Searles-Bryant <sam@samueljsb.co.uk>
+Date:   Sat Apr 18 12:59:39 2026 +0300
+
+    Fixed #37045 -- Renamed savepoint() to savepoint_create().
+    
+    This makes the name consistent with the `savepoint_commit` and
+    `savepoint_rollback` functions. The previous name is maintained as a
+    deprecated alias.
+    
+    This also frees up the `savepoint` name, which would allow the context
+    manager from `django-subatomic` to be included in Django.
+    
+    Co-authored-by: Lily <code@lilyf.org>
+
+diff --git a/tests/transactions/tests.py b/tests/transactions/tests.py
+index bff1a30cf2..0baeca29e6 100644
+--- a/tests/transactions/tests.py
++++ b/tests/transactions/tests.py
+@@ -12,11 +12,13 @@ from django.db import (
+     transaction,
+ )
+ from django.test import (
++    SimpleTestCase,
+     TestCase,
+     TransactionTestCase,
+     skipIfDBFeature,
+     skipUnlessDBFeature,
+ )
++from django.utils.deprecation import RemovedInDjango70Warning
+ 
+ from .models import Reporter
+ 
+@@ -214,7 +216,7 @@ class AtomicTests(TransactionTestCase):
+     def test_prevent_rollback(self):
+         with transaction.atomic():
+             reporter = Reporter.objects.create(first_name="Tintin")
+-            sid = transaction.savepoint()
++            sid = transaction.savepoint_create()
+             # trigger a database error inside an inner atomic without savepoint
+             with self.assertRaises(DatabaseError):
+                 with transaction.atomic(savepoint=False):
+@@ -589,3 +591,10 @@ class DurableTransactionTests(DurableTestsBase, TransactionTestCase):
+ 
+ class DurableTests(DurableTestsBase, TestCase):
+     pass
++
++
++class SavepointTests(SimpleTestCase):
++    def test_deprecation_warning(self):
++        msg = "savepoint() is deprecated. Use savepoint_create() instead."
++        with self.assertRaisesMessage(RemovedInDjango70Warning, msg):
++            transaction.savepoint()

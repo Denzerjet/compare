@@ -1,0 +1,19 @@
+commit e26cdc556eabd8ea443401c38e8b2f9c7f7f046c
+Author: FrickWu <frickhearthstone@gmail.com>
+Date:   Tue Jun 2 20:41:40 2026 -0400
+
+    Fixed #37122 -- Updated JSONField has_changed method to check for disabled status.
+
+diff --git a/django/forms/fields.py b/django/forms/fields.py
+index ab3f6876df..ee8d87d92a 100644
+--- a/django/forms/fields.py
++++ b/django/forms/fields.py
+@@ -1390,6 +1390,8 @@ class JSONField(CharField):
+         return json.dumps(value, ensure_ascii=False, cls=self.encoder)
+ 
+     def has_changed(self, initial, data):
++        if self.disabled:
++            return False
+         if super().has_changed(initial, data):
+             return True
+         # For purposes of seeing whether something has changed, True isn't the

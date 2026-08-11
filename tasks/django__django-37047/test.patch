@@ -1,0 +1,39 @@
+commit a284a49153f005f2a7af087025e5112ba06cbd5f
+Author: Anže Pečar <anze@pecar.me>
+Date:   Sat Apr 18 14:54:55 2026 +0300
+
+    Fixed #37047 -- Fixed crash in Query.orderby_issubset_groupby for descending and random order_by strings.
+    
+    Run this example:
+    
+    ```python
+    User.objects.values("is_staff").annotate(latest=Max("date_joined")).order_by("-latest").count()
+    ```
+    
+    You should see the following exception:
+    
+    ```
+    django.core.exceptions.FieldError: Cannot resolve keyword '-latest' into field.
+    ```
+    
+    Regression in 2ce5cb0f7a4618dfdc5f5c10e53e2e9b9543d298.
+
+diff --git a/tests/aggregation_regress/tests.py b/tests/aggregation_regress/tests.py
+index 33763d589b..f2ed13420f 100644
+--- a/tests/aggregation_regress/tests.py
++++ b/tests/aggregation_regress/tests.py
+@@ -188,6 +188,14 @@ class AggregationTests(TestCase):
+         )
+         self.assertEqual(qs.order_by("id").count(), len(qs.order_by("id")))
+         self.assertEqual(qs.extra(order_by=["id"]).count(), len(qs.order_by("id")))
++        self.assertEqual(qs.order_by("-id").count(), len(qs.order_by("-id")))
++        self.assertEqual(
++            qs.order_by("-publications").count(), len(qs.order_by("-publications"))
++        )
++        self.assertEqual(
++            qs.order_by("-contact__name").count(), len(qs.order_by("-contact__name"))
++        )
++        self.assertEqual(qs.order_by("?").count(), len(qs.order_by("?")))
+ 
+     def test_annotation_with_value(self):
+         values = (

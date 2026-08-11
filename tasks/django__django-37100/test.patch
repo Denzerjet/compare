@@ -1,0 +1,40 @@
+commit 53645750412efa1e9013004040db328bd515e0f1
+Author: Varun Kasyap <varunkasyap@hotmail.com>
+Date:   Sat May 16 12:26:14 2026 +0530
+
+    Fixed #37100 -- Prevented control characters in HttpResponse reason_phrase.
+
+diff --git a/tests/responses/tests.py b/tests/responses/tests.py
+index b16cb53364..05df257b3e 100644
+--- a/tests/responses/tests.py
++++ b/tests/responses/tests.py
+@@ -2,7 +2,7 @@ import io
+ 
+ from django.conf import settings
+ from django.core.cache import cache
+-from django.http import HttpResponse
++from django.http import BadHeaderError, HttpResponse
+ from django.http.response import HttpResponseBase
+ from django.test import SimpleTestCase
+ 
+@@ -103,6 +103,20 @@ class HttpResponseTests(SimpleTestCase):
+         self.assertEqual(resp.status_code, 419)
+         self.assertEqual(resp.reason_phrase, reason)
+ 
++    def test_invalid_reason_phrase(self):
++        msg = "reason_phrase can't contain control characters."
++        invalid_reasons = [
++            "OK\r\nX-Injected-header: yes",
++            "OK\x00",
++            "OK\x1f",
++            "OK\x7f",
++            "OK\x9f",
++        ]
++        for reason in invalid_reasons:
++            with self.subTest(reason=reason):
++                with self.assertRaisesMessage(BadHeaderError, msg):
++                    HttpResponse(reason=reason)
++
+     def test_charset_detection(self):
+         """HttpResponse should parse charset from content_type."""
+         response = HttpResponse("ok")

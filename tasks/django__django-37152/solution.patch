@@ -1,0 +1,33 @@
+commit 09434486302078c3649e034dfa74cf3f102db20b
+Author: diaxoaine <42137630+diaxoaine@users.noreply.github.com>
+Date:   Thu Jun 11 09:58:41 2026 +0700
+
+    Fixed #37152 -- Raised ValueError when Bcc is used in EmailMessage headers.
+    
+    Bcc addresses are sent via the SMTP envelope and must never appear in
+    the message itself. A "Bcc" key in `extra_headers` was not excluded like
+    From/To/Cc/Reply-To, so it leaked into the generated message as a
+    visible header.
+    
+    Thanks Mike Edmunds for reviews.
+
+diff --git a/django/core/mail/message.py b/django/core/mail/message.py
+index 549b8050fe..2b396d870b 100644
+--- a/django/core/mail/message.py
++++ b/django/core/mail/message.py
+@@ -360,8 +360,14 @@ class EmailMessage:
+             # Use cached DNS_NAME for performance
+             msg["Message-ID"] = make_msgid(domain=DNS_NAME)
+         for name, value in self.extra_headers.items():
++            header = name.lower()
++            if header == "bcc":
++                raise ValueError(
++                    'Bcc is not a valid email header. Use the "bcc" '
++                    "argument to specify blind carbon copy recipients."
++                )
+             # Avoid headers handled above.
+-            if name.lower() not in {"from", "to", "cc", "reply-to"}:
++            if header not in {"from", "to", "cc", "reply-to"}:
+                 msg[name] = force_str(value, strings_only=True)
+         self._idna_encode_address_header_domains(msg)
+         return msg

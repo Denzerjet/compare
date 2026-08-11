@@ -1,0 +1,23 @@
+commit 89e82866dc2746383c336c7b10e050b9da3ae1ef
+Author: Jakob Friedrich <jatfr05@gmail.com>
+Date:   Sun Mar 1 21:39:12 2026 +0100
+
+    Fixed #29969 -- Omitted inlines without add permission on save-as-new.
+
+diff --git a/django/contrib/admin/options.py b/django/contrib/admin/options.py
+index 8ce7ffa942..060c9a0917 100644
+--- a/django/contrib/admin/options.py
++++ b/django/contrib/admin/options.py
+@@ -2646,6 +2646,12 @@ class ModelAdmin(BaseModelAdmin):
+             if prefixes[prefix] != 1 or not prefix:
+                 prefix = "%s-%s" % (prefix, prefixes[prefix])
+             formset_params = self.get_formset_kwargs(request, obj, inline, prefix)
++            if formset_params.get("save_as_new") and not inline.has_add_permission(
++                request, None
++            ):
++                formset_params["data"] = formset_params["data"].copy()
++                formset_params["data"]["%s-TOTAL_FORMS" % prefix] = "0"
++                formset_params["data"]["%s-INITIAL_FORMS" % prefix] = "0"
+             formset = FormSet(**formset_params)
+ 
+             def user_deleted_form(request, obj, formset, index, inline):

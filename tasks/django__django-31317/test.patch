@@ -1,0 +1,109 @@
+commit cd385e6b8c16b51f68c1f220ff09a4cfd679af0c
+Author: David Wobrock <david.wobrock@backmarket.com>
+Date:   Mon Mar 16 22:39:40 2026 +0100
+
+    Fixed #31317 -- Avoided crash in CreateModel with unique_together and AlterUniqueTogether.
+
+diff --git a/tests/migrations/test_operations.py b/tests/migrations/test_operations.py
+index 7189cef400..b3d5481267 100644
+--- a/tests/migrations/test_operations.py
++++ b/tests/migrations/test_operations.py
+@@ -3861,6 +3861,62 @@ class OperationTests(OperationTestBase):
+             operation.describe(), "Alter unique_together for Pony (0 constraint(s))"
+         )
+ 
++    def test_alter_unique_together_deferred(self):
++        """
++        AlterUniqueTogether handles deferred SQL constraints from previous
++        operations. Regression test for #31317.
++        """
++        app_label = "test_aluntod"
++        self.apply_operations(
++            app_label,
++            ProjectState(),
++            operations=[
++                migrations.CreateModel(
++                    "Pony",
++                    fields=[
++                        ("id", models.AutoField(primary_key=True)),
++                        ("pink", models.IntegerField(default=3)),
++                        ("weight", models.FloatField()),
++                    ],
++                    options={"unique_together": {("pink",)}},
++                ),
++                migrations.AlterUniqueTogether(
++                    name="Pony",
++                    unique_together={("pink", "weight")},
++                ),
++            ],
++        )
++
++        table_name = f"{app_label}_pony"
++        self.assertUniqueConstraintExists(table_name, ("pink", "weight"), value=True)
++        self.assertUniqueConstraintExists(table_name, ("pink",), value=False)
++
++    def test_alter_unique_together_deferred_overlapping_columns(self):
++        app_label = "test_aluntodoc"
++        self.apply_operations(
++            app_label,
++            ProjectState(),
++            operations=[
++                migrations.CreateModel(
++                    "Pony",
++                    fields=[
++                        ("id", models.AutoField(primary_key=True)),
++                        ("pink", models.IntegerField(default=3)),
++                        ("weight", models.FloatField()),
++                    ],
++                    options={"unique_together": [("pink", "weight"), ("pink",)]},
++                ),
++                migrations.AlterUniqueTogether(
++                    name="Pony",
++                    unique_together={("pink", "weight")},
++                ),
++            ],
++        )
++
++        table_name = f"{app_label}_pony"
++        self.assertUniqueConstraintExists(table_name, ("pink", "weight"), value=True)
++        self.assertUniqueConstraintExists(table_name, ("pink",), value=False)
++
+     @skipUnlessDBFeature("allows_multiple_constraints_on_same_fields")
+     def test_remove_unique_together_on_pk_field(self):
+         app_label = "test_rutopkf"
+@@ -4452,6 +4508,35 @@ class OperationTests(OperationTestBase):
+         self.assertIndexNotExists(table_name, ["pink", "weight"])
+         self.assertUniqueConstraintExists(table_name, ["pink", "weight"])
+ 
++    def test_alter_index_together_deferred_overlapping_columns(self):
++        app_label = "test_alintodoc"
++        self.apply_operations(
++            app_label,
++            ProjectState(),
++            operations=[
++                migrations.CreateModel(
++                    "Pony",
++                    fields=[
++                        ("id", models.AutoField(primary_key=True)),
++                        ("pink", models.IntegerField(default=3)),
++                        ("weight", models.FloatField()),
++                    ],
++                    options={
++                        "unique_together": [("pink",)],
++                        "index_together": [("pink",)],
++                    },
++                ),
++                migrations.AlterIndexTogether(
++                    name="Pony",
++                    index_together=set(),
++                ),
++            ],
++        )
++
++        table_name = f"{app_label}_pony"
++        self.assertIndexNotExists(table_name, ["pink"])
++        self.assertUniqueConstraintExists(table_name, ("pink",), value=True)
++
+     def test_add_constraint(self):
+         project_state = self.set_up_test_model("test_addconstraint")
+         gt_check = models.Q(pink__gt=2)

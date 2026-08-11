@@ -1,0 +1,19 @@
+commit 0ed8d4e7d1029e1283b04f70d51d2af96ad85d6a
+Author: Baptiste Mispelon <baptiste.mispelon@torchbox.com>
+Date:   Mon Jan 12 14:51:32 2026 +0100
+
+    Fixed #36859 -- Made assertContains and assertNotContains idempotent for streaming responses.
+
+diff --git a/django/test/testcases.py b/django/test/testcases.py
+index 5f83612fe5..de2a3eb61d 100644
+--- a/django/test/testcases.py
++++ b/django/test/testcases.py
+@@ -575,6 +575,8 @@ class SimpleTestCase(unittest.TestCase):
+ 
+         if response.streaming:
+             content = b"".join(response.streaming_content)
++            # Reset the content so it can be checked again (idempotency).
++            response.streaming_content = [content]
+         else:
+             content = response.content
+         response_content = content

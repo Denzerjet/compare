@@ -1,0 +1,44 @@
+commit 1085e5e17b7403b15c4eff397f3c98c15660f46d
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Fri May 1 12:20:28 2026 -0400
+
+    Fixed #36300 -- Restored the semantic where RemoteUserMiddleware.header corresponds to request.META under ASGI.
+    
+    Because these tests always passed both WSGI environ values and HTTP
+    headers via `**extra`, this masked a behavior difference between WSGI
+    and ASGI.
+    
+    What should happen: everything should be passed via `headers` but for
+    the default REMOTE_USER case on WSGI, which should be passed via
+    `**extra`.
+    
+    Since that was not done, a regression made it into Django 5.2
+    (50f89ae850f6b4e35819fe725a08c7e579bfd099) where `.header` no longer
+    corresponded to the request.META key under ASGI. To cope, an ASGI user
+    would have started(*) sending HTTP headers that match the `.header`
+    attribute, which may or may not have been edited to remove the HTTP_
+    prefix. (Note: the default `REMOTE_USER` case did not work under ASGI,
+    so the change in Django 5.2 had the effect of fixing the default case
+    but changing the semantic of the custom case.)
+    
+    (*): Unless they were getting the sync execution path, which didn't have
+    this bug. See the fix in 0f4fff79d33b7cc84822e66bd1fc16caf8222e3a.
+    
+    Thanks Mykhailo Havelia and Sarah Boyce for reviews.
+
+diff --git a/django/contrib/auth/middleware.py b/django/contrib/auth/middleware.py
+index ca8187a364..09e3d3e6bb 100644
+--- a/django/contrib/auth/middleware.py
++++ b/django/contrib/auth/middleware.py
+@@ -238,7 +238,10 @@ class RemoteUserMiddleware:
+         return username
+ 
+     def get_username(self, request):
+-        if isinstance(request, ASGIRequest):
++        if (
++            isinstance(request, ASGIRequest)
++            and self.header == RemoteUserMiddleware.header
++        ):
+             return request.META["HTTP_" + self.header]
+         return request.META[self.header]
+ 

@@ -1,0 +1,38 @@
+commit 179aa21b6dfeb9a0560a8c2bbfcf056301fc619f
+Author: Tim Graham <timograham@gmail.com>
+Date:   Sun Apr 19 02:04:22 2026 -0400
+
+    Fixed #37024 -- Made SITE_ID system check validation use Site._meta.pk.
+
+diff --git a/tests/sites_tests/tests.py b/tests/sites_tests/tests.py
+index 79183f7aca..32bc8f65f9 100644
+--- a/tests/sites_tests/tests.py
++++ b/tests/sites_tests/tests.py
+@@ -204,12 +204,25 @@ class SitesFrameworkTests(TestCase):
+         self.assertEqual(self.site.natural_key(), (self.site.domain,))
+ 
+     @override_settings(SITE_ID="1")
+-    def test_check_site_id(self):
++    def test_check_site_id_incorrect_type(self):
+         self.assertEqual(
+             check_site_id(None),
+             [
+                 checks.Error(
+-                    msg="The SITE_ID setting must be an integer",
++                    msg="The SITE_ID setting must be of type int.",
++                    id="sites.E101",
++                ),
++            ],
++        )
++
++    @override_settings(SITE_ID="x")
++    def test_check_site_id_failed_to_validate(self):
++        self.assertEqual(
++            check_site_id(None),
++            [
++                checks.Error(
++                    msg="The SITE_ID setting failed to validate: ['“x” value "
++                    "must be an integer.'].",
+                     id="sites.E101",
+                 ),
+             ],

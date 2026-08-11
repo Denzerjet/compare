@@ -1,0 +1,58 @@
+commit cec10f992be8eed5ed90506375ae5794cbb7069e
+Author: Eddy Adegnandjou <adegnandjoueddy12@gmail.com>
+Date:   Fri Oct 31 09:00:41 2025 +0100
+
+    Fixed #20024 -- Fixed handling of __in lookups with None in exclude().
+    
+    Thanks Simon Charette and Tim Graham for reviews, and Jason Hall for a
+    prior iteration.
+
+diff --git a/tests/composite_pk/test_filter.py b/tests/composite_pk/test_filter.py
+index 617d8370db..fdaa323fd8 100644
+--- a/tests/composite_pk/test_filter.py
++++ b/tests/composite_pk/test_filter.py
+@@ -617,9 +617,20 @@ class CompositePKExcludeNoneTests(TestCase):
+             tenant=cls.tenant, id=1, email="exclude@example.com"
+         )
+ 
+-    def test_pk_in_with_partial_or_all_none(self):
+-        qs = User.objects
+-        self.assertQuerySetEqual(qs.filter(pk__in=[(1, None)]), [])
+-        self.assertQuerySetEqual(qs.filter(pk__in=[(None, None)]), [])
+-        self.assertQuerySetEqual(qs.exclude(pk__in=[(1, None)]), [self.user])
+-        self.assertQuerySetEqual(qs.exclude(pk__in=[(None, None)]), [self.user])
++    def test_filter_pk_in_partial_none(self):
++        self.assertQuerySetEqual(
++            User.objects.filter(pk__in=[(self.user.pk[0], None)]), []
++        )
++
++    def test_filter_pk_in_full_none(self):
++        self.assertQuerySetEqual(User.objects.filter(pk__in=[(None, None)]), [])
++
++    def test_exclude_pk_in_partial_none(self):
++        self.assertQuerySetEqual(
++            User.objects.exclude(pk__in=[(self.user.pk[0], None)]), [self.user]
++        )
++
++    def test_exclude_pk_in_full_none(self):
++        self.assertQuerySetEqual(
++            User.objects.exclude(pk__in=[(None, None)]), [self.user]
++        )
+diff --git a/tests/queries/tests.py b/tests/queries/tests.py
+index f2136df243..c00a78e2ed 100644
+--- a/tests/queries/tests.py
++++ b/tests/queries/tests.py
+@@ -3536,13 +3536,7 @@ class NullInExcludeTest(TestCase):
+         # into subquery above
+         self.assertIs(inner_qs._result_cache, None)
+ 
+-    @unittest.expectedFailure
+     def test_col_not_in_list_containing_null(self):
+-        """
+-        The following case is not handled properly because
+-        SQL's COL NOT IN (list containing null) handling is too weird to
+-        abstract away.
+-        """
+         self.assertQuerySetEqual(
+             NullableName.objects.exclude(name__in=[None]), ["i1"], attrgetter("name")
+         )

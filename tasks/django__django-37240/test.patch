@@ -1,0 +1,24 @@
+commit ca14173f968cf36115f22d6c6785f738de4391ed
+Author: SEPURI-SAI-KRISHNA <saik20533@gmail.com>
+Date:   Thu Jul 30 11:52:50 2026 +0530
+
+    Fixed #37240 -- Fixed simplify_regex() with multiple unnamed groups.
+
+diff --git a/tests/urlpatterns/tests.py b/tests/urlpatterns/tests.py
+index 32657e58d4..241e1e65d8 100644
+--- a/tests/urlpatterns/tests.py
++++ b/tests/urlpatterns/tests.py
+@@ -454,6 +454,13 @@ class SimplifyRegexTests(SimpleTestCase):
+             (r"^(?P<a>(x|y))/b/(?P<c>\w+)", "/<a>/b/<c>"),
+             (r"^(?P<a>(x|y))/b/(?P<c>\w+)ab", "/<a>/b/<c>ab"),
+             (r"^(?P<a>(x|y)(\(|\)))/b/(?P<c>\w+)ab", "/<a>/b/<c>ab"),
++            # Multiple unnamed groups.
++            (r"^(\w+)/b/(\w+)$", "/<var>/b/<var>"),
++            (r"^(\w+)/b/(\w+)", "/<var>/b/<var>"),
++            (r"^a/(\w+)/b/(\d+)/c/(\w+)$", "/a/<var>/b/<var>/c/<var>"),
++            (r"^(?P<a>\w+)/b/(\w+)/(\d+)$", "/<a>/b/<var>/<var>"),
++            (r"^b/((x|y)\w+)/((z|w)\d+)$", "/b/<var>/<var>"),
++            (r"^(\w+)/\((\d+)\)$", r"/<var>/(<var>)"),
+             # Non-capturing groups.
+             (r"^a(?:\w+)b", "/ab"),
+             (r"^a(?:(x|y))", "/a"),

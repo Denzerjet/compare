@@ -1,0 +1,124 @@
+commit 65a9f14196c338d70889bd54753370606b3fb4eb
+Author: Leland <lboeman@arizona.edu>
+Date:   Mon May 18 15:32:12 2026 -0700
+
+    Fixed #36864 -- Supported modules and submodules in import_string().
+    
+    Before, only submodules worked (and only if already imported). Now,
+    all modules work regardless of prior import state.
+    
+    Updated expected exception in auth tests where import_string() returns
+    a non-callable.
+
+diff --git a/django/contrib/auth/password_validation.py b/django/contrib/auth/password_validation.py
+index 690be58700..d6b637e01d 100644
+--- a/django/contrib/auth/password_validation.py
++++ b/django/contrib/auth/password_validation.py
+@@ -33,6 +33,13 @@ def get_password_validators(validator_config):
+                 "AUTH_PASSWORD_VALIDATORS setting."
+             )
+             raise ImproperlyConfigured(msg % validator["NAME"])
++        else:
++            if not callable(klass):
++                msg = (
++                    "The configured validator in NAME is not callable: %s. "
++                    "Check your AUTH_PASSWORD_VALIDATORS setting."
++                )
++                raise ImproperlyConfigured(msg % validator["NAME"])
+         validators.append(klass(**validator.get("OPTIONS", {})))
+ 
+     return validators
+diff --git a/django/db/backends/base/creation.py b/django/db/backends/base/creation.py
+index 5087f80b7e..859fb07ff5 100644
+--- a/django/db/backends/base/creation.py
++++ b/django/db/backends/base/creation.py
+@@ -372,21 +372,8 @@ class BaseDatabaseCreation:
+         test_app = test_name.split(".")[0]
+         # Importing a test app that isn't installed raises RuntimeError.
+         if test_app in settings.INSTALLED_APPS:
+-            try:
+-                test_frame = import_string(module_or_class_name)
+-            except ImportError:
+-                # import_string() can raise ImportError if a submodule's parent
+-                # module hasn't already been imported during test discovery.
+-                # This can happen in at least two cases:
+-                # 1. When running a subset of tests in a module, the test
+-                #    runner won't import tests in that module's other
+-                #    submodules.
+-                # 2. When the parallel test runner spawns workers with an empty
+-                #    import cache.
+-                test_to_mark = import_string(test_name)
+-                test_frame = sys.modules.get(test_to_mark.__module__)
+-            else:
+-                test_to_mark = getattr(test_frame, name_to_mark)
++            test_frame = import_string(module_or_class_name)
++            test_to_mark = getattr(test_frame, name_to_mark)
+             if skip_reason:
+                 setattr(test_frame, name_to_mark, skip(skip_reason)(test_to_mark))
+             else:
+diff --git a/django/utils/module_loading.py b/django/utils/module_loading.py
+index 28067e8d89..70f26d746e 100644
+--- a/django/utils/module_loading.py
++++ b/django/utils/module_loading.py
+@@ -5,7 +5,7 @@ from importlib import import_module
+ from importlib.util import find_spec as importlib_find
+ 
+ 
+-def cached_import(module_path, class_name):
++def cached_import(module_path):
+     # Check whether module is loaded and fully initialized.
+     if not (
+         (module := sys.modules.get(module_path))
+@@ -13,26 +13,39 @@ def cached_import(module_path, class_name):
+         and getattr(spec, "_initializing", False) is False
+     ):
+         module = import_module(module_path)
+-    return getattr(module, class_name)
++    return module
+ 
+ 
+ def import_string(dotted_path):
+     """
+-    Import a dotted module path and return the attribute/class designated by
+-    the last name in the path. Raise ImportError if the import failed.
++    Import a dotted module path and return the module or attribute/class
++    designated by the path. Raise ImportError if the import failed.
+     """
+-    try:
++    if "." not in dotted_path:
++        return cached_import(dotted_path)
++    else:
++        # Force a consistent state by eagerly importing the entire dotted path.
++        try:
++            cached_import(dotted_path)
++        except ImportError:
++            pass
++
+         module_path, class_name = dotted_path.rsplit(".", 1)
+-    except ValueError as err:
+-        raise ImportError("%s doesn't look like a module path" % dotted_path) from err
++        module = cached_import(module_path)
+ 
+-    try:
+-        return cached_import(module_path, class_name)
+-    except AttributeError as err:
+-        raise ImportError(
+-            'Module "%s" does not define a "%s" attribute/class'
+-            % (module_path, class_name)
+-        ) from err
++        # Attempt getattr first, which will return any named objects
++        # in a loaded module or a previously loaded submodule.
++        try:
++            import_target = getattr(module, class_name)
++        except AttributeError:
++            try:
++                import_target = cached_import(dotted_path)
++            except ImportError as err:
++                raise ImportError(
++                    'Module "%s" does not define a "%s" attribute/class'
++                    % (module_path, class_name)
++                ) from err
++        return import_target
+ 
+ 
+ def autodiscover_modules(*args, **kwargs):

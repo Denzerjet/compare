@@ -1,0 +1,33 @@
+commit c9ff757a55392b1f50968eb89fe775f6155168d8
+Author: Filip Sedlák <filip@sedlakovi.org>
+Date:   Mon Jul 27 15:18:33 2026 +0530
+
+    Fixed #37234 -- Fixed bulk_create() for late-saved related primary keys.
+    
+    Objects with a primary key supplied by a late-saved related instance
+    were partitioned before their related fields were prepared. This
+    caused an assertion failure on backends returning rows from bulk
+    inserts.
+    
+    Regression in 7d9aab8da0a06787d649762a702e1a518d843a63.
+
+diff --git a/django/db/models/query.py b/django/db/models/query.py
+index 2d9bcee9bc..748a0508b2 100644
+--- a/django/db/models/query.py
++++ b/django/db/models/query.py
+@@ -747,6 +747,7 @@ class QuerySet(AltersData):
+     def _prepare_for_bulk_create(self, objs):
+         objs_with_pk, objs_without_pk = [], []
+         for obj in objs:
++            obj._prepare_related_fields_for_save(operation_name="bulk_create")
+             if isinstance(obj.pk, DatabaseDefault):
+                 objs_without_pk.append(obj)
+             elif obj._is_pk_set():
+@@ -757,7 +758,6 @@ class QuerySet(AltersData):
+                     objs_with_pk.append(obj)
+                 else:
+                     objs_without_pk.append(obj)
+-            obj._prepare_related_fields_for_save(operation_name="bulk_create")
+         return objs_with_pk, objs_without_pk
+ 
+     def _check_bulk_create_options(

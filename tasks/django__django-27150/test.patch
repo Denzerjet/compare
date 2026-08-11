@@ -1,0 +1,20 @@
+commit 3157285e27a426530ef571855e0e29c317e210df
+Author: VIZZARD-X <vigneshanandmay13@gmail.com>
+Date:   Wed Nov 26 14:06:20 2025 +0530
+
+    Fixed #27150 -- Made base File objects truthy by default.
+
+diff --git a/tests/files/tests.py b/tests/files/tests.py
+index cfda70053f..9ee27b741f 100644
+--- a/tests/files/tests.py
++++ b/tests/files/tests.py
+@@ -233,6 +233,9 @@ class NoNameFileTestCase(unittest.TestCase):
+     def test_noname_file_get_size(self):
+         self.assertEqual(File(BytesIO(b"A file with no name")).size, 19)
+ 
++    def test_noname_bool(self):
++        self.assertTrue(bool(File(BytesIO(b"A file with no name"))))
++
+ 
+ class ContentFileTestCase(unittest.TestCase):
+     def test_content_file_default_name(self):

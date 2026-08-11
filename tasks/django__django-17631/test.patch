@@ -1,0 +1,55 @@
+commit 7ab2d803533dd3ffe310055414ad584cfbbf0bea
+Author: anurag629 <akvermaav629@gmail.com>
+Date:   Tue Mar 17 22:17:31 2026 +0530
+
+    Fixed #17631 -- Handled fields and files with the same name in encode_multipart().
+    
+    When data is a MultiValueDict, encode_multipart() now uses data.lists()
+    instead of data.items() to preserve all values per key. Previously, only
+    the last value for each key was encoded, silently dropping form field
+    values when a file upload shared the same name.
+
+diff --git a/tests/test_client/tests.py b/tests/test_client/tests.py
+index 2ba9455d0c..98f01827d0 100644
+--- a/tests/test_client/tests.py
++++ b/tests/test_client/tests.py
+@@ -27,6 +27,7 @@ from unittest import mock
+ 
+ from django.contrib.auth.models import Permission, User
+ from django.core import mail
++from django.core.files.uploadedfile import SimpleUploadedFile
+ from django.http import HttpResponse, HttpResponseNotAllowed
+ from django.test import (
+     AsyncRequestFactory,
+@@ -38,6 +39,7 @@ from django.test import (
+     override_settings,
+ )
+ from django.urls import reverse_lazy
++from django.utils.datastructures import MultiValueDict
+ from django.utils.decorators import async_only_middleware
+ from django.views.generic import RedirectView
+ 
+@@ -1045,6 +1047,23 @@ class ClientTest(TestCase):
+             )
+         self.assertEqual(response.content, b"named_temp_file")
+ 
++    def test_uploading_file_and_field_with_same_name(self):
++        """
++        A form field and file uploads sharing the same name in a
++        MultiValueDict are both preserved when posted by the test client.
++        """
++        file = SimpleUploadedFile("file.txt", b"content")
++        response = self.client.post(
++            "/upload_view/",
++            data=MultiValueDict({"shared": ["field_value", file]}),
++        )
++        request = response.wsgi_request
++        self.assertEqual(request.POST.getlist("shared"), ["field_value"])
++        self.assertEqual(
++            [f.name for f in request.FILES.getlist("shared")],
++            ["file.txt"],
++        )
++
+     def test_query_params(self):
+         tests = (
+             "get",

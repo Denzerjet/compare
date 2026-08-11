@@ -1,0 +1,34 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "335c6d0129400eda792f3bec5c71bb28af5e5d37",
+  "base_commit": "ed13a58bf63df94508c8a0fe779da0b6a2bc26bb",
+  "commit_date": "2026-05-12",
+  "subject": "Fixed #37095 -- Checked maximum redirect lengths against percent-encoded URLs.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37095",
+  "source_files": [
+    "django/http/response.py"
+  ],
+  "test_files": [
+    "tests/httpwrappers/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "httpwrappers.tests"
+  ],
+  "narrowed_test_labels": [
+    "httpwrappers.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.41,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

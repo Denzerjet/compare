@@ -1,0 +1,35 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "7c125f6a6660a70a0568448b2e40db273a456479",
+  "base_commit": "3e4e0db66961a48a080ff3ff91f6c0d954261366",
+  "commit_date": "2026-05-20",
+  "subject": "Fixed #37105 -- Disallowed admin change form actions on different objects.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37105",
+  "source_files": [
+    "django/contrib/admin/options.py",
+    "django/contrib/admin/templates/admin/change_form.html"
+  ],
+  "test_files": [
+    "tests/admin_views/test_actions.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "admin_views.test_actions"
+  ],
+  "narrowed_test_labels": [
+    "admin_views.test_actions"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 2.71,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

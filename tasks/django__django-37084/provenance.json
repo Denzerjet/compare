@@ -1,0 +1,39 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "62fa9b8976b9fd74440e9f97c0744feaf3165dc9",
+  "base_commit": "8096b5251090bf7539c59956e398b027c7525529",
+  "commit_date": "2026-05-07",
+  "subject": "Fixed #37084 -- Added CSP nonce context processor system check.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37084",
+  "source_files": [
+    "django/core/checks/security/base.py"
+  ],
+  "test_files": [
+    "tests/check_framework/test_security.py"
+  ],
+  "dropped_files": [
+    "docs/ref/checks.txt",
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "check_framework.test_security"
+  ],
+  "narrowed_test_labels": [
+    "check_framework.test_security"
+  ],
+  "skipped_tests": [
+    "check_framework.test_security.CSRFFailureViewTest.test_failure_view_valid_deferred_annotations"
+  ],
+  "graded_runtime_sec": 1.74,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

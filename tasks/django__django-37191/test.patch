@@ -1,0 +1,23 @@
+commit d058058976496cedf3f36fa303a0327af38cdeaa
+Author: ayoub <ayoub.bouaik.22@gmail.com>
+Date:   Fri Jun 26 13:18:09 2026 +0100
+
+    Fixed #37191 -- Prevented ValueError in FileBasedCache.touch() for expired keys.
+
+diff --git a/tests/cache/tests.py b/tests/cache/tests.py
+index 45e47854ab..4b5d18fec1 100644
+--- a/tests/cache/tests.py
++++ b/tests/cache/tests.py
+@@ -1971,6 +1971,12 @@ class FileBasedCacheTests(BaseCacheTests, TestCase):
+         ):
+             super().test_touch()
+ 
++    def test_touch_expired_key_does_not_crash(self):
++        cache.set("expired_touch_key", "value", timeout=0.01)
++        time.sleep(0.05)
++        result = cache.touch("expired_touch_key", 60)
++        self.assertIs(result, False)
++
+ 
+ @unittest.skipUnless(RedisCache_params, "Redis backend not configured")
+ @override_settings(

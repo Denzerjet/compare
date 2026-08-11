@@ -1,0 +1,55 @@
+commit 0147222691db284f87c8c2a64ac6b1eded034c49
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Thu Apr 30 14:53:17 2026 -0400
+
+    Fixed #37079 -- Fixed specialization of header lookups in RemoteUserMiddleware.
+    
+    We need to switch on whether the request is a WSGI or ASGI request to
+    know whether to prepend `HTTP_`: we cannot assume sync exceution means
+    we are running under WSGI, as there could be other sync middleware
+    forcing sync execution under ASGI.
+    
+    Thanks Mykhailo Havelia for the report.
+
+diff --git a/django/contrib/auth/middleware.py b/django/contrib/auth/middleware.py
+index bedb749d92..c38cd8bc99 100644
+--- a/django/contrib/auth/middleware.py
++++ b/django/contrib/auth/middleware.py
+@@ -8,6 +8,7 @@ from django.contrib.auth import REDIRECT_FIELD_NAME, load_backend
+ from django.contrib.auth.backends import RemoteUserBackend
+ from django.contrib.auth.views import redirect_to_login
+ from django.core.exceptions import ImproperlyConfigured
++from django.core.handlers.asgi import ASGIRequest
+ from django.shortcuts import resolve_url
+ from django.utils.deprecation import MiddlewareMixin
+ from django.utils.functional import SimpleLazyObject
+@@ -141,7 +142,7 @@ class RemoteUserMiddleware:
+                 f" before the {self.__class__.__name__} class."
+             )
+         try:
+-            username = request.META[self.header]
++            username = self._get_username(request)
+         except KeyError:
+             # If specified header doesn't exist then remove any existing
+             # authenticated remote-user, or return (leaving request.user set to
+@@ -183,7 +184,7 @@ class RemoteUserMiddleware:
+                 f" before the {self.__class__.__name__} class."
+             )
+         try:
+-            username = request.META["HTTP_" + self.header]
++            username = self._get_username(request)
+         except KeyError:
+             # If specified header doesn't exist then remove any existing
+             # authenticated remote-user, or return (leaving request.user set to
+@@ -236,6 +237,11 @@ class RemoteUserMiddleware:
+             pass
+         return username
+ 
++    def _get_username(self, request):
++        if isinstance(request, ASGIRequest):
++            return request.META["HTTP_" + self.header]
++        return request.META[self.header]
++
+     def _remove_invalid_user(self, request):
+         """
+         Remove the current authenticated user in the request which is invalid

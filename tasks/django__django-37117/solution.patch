@@ -1,0 +1,21 @@
+commit a53e02af6d7a07d0367b534f7107a0e2a37e3d34
+Author: Natalia <124304+nessita@users.noreply.github.com>
+Date:   Fri May 22 14:08:42 2026 -0300
+
+    Fixed #37117 -- Used ModelAdmin.get_queryset() for change form actions.
+    
+    Refs #37105, #12090.
+
+diff --git a/django/contrib/admin/options.py b/django/contrib/admin/options.py
+index 1772638748..83faff961d 100644
+--- a/django/contrib/admin/options.py
++++ b/django/contrib/admin/options.py
+@@ -2103,7 +2103,7 @@ class ModelAdmin(BaseModelAdmin):
+                 selected = request.POST.getlist(helpers.ACTION_CHECKBOX_NAME)
+                 if len(selected) != 1 or selected[0] != str(obj.pk):
+                     raise BadRequest
+-                queryset = self.model._default_manager.get_queryset()
++                queryset = self.get_queryset(request)
+                 if response := self.response_action(
+                     request, queryset, action_location=ActionLocation.CHANGE_FORM
+                 ):

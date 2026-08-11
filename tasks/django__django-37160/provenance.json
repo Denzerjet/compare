@@ -1,0 +1,71 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "4ea38d54c10e0f44e189605c217a55cdfe9fdde8",
+  "base_commit": "8a162076e1988ddf9453edfb8329d5df1573dc38",
+  "commit_date": "2026-07-24",
+  "subject": "Fixed #37160 -- Made admin views raise PermissionDenied consistently.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37160",
+  "source_files": [
+    "django/contrib/admin/sites.py",
+    "django/contrib/admin/options.py"
+  ],
+  "test_files": [
+    "tests/admin_views/tests.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.2.txt"
+  ],
+  "full_test_labels": [
+    "admin_views.tests"
+  ],
+  "narrowed_test_labels": [
+    "admin_views.tests"
+  ],
+  "skipped_tests": [
+    "admin_views.tests.SeleniumTests.test_cancel_delete_confirmation",
+    "admin_views.tests.SeleniumTests.test_cancel_delete_related_confirmation",
+    "admin_views.tests.SeleniumTests.test_changelist_filter_sidebar_with_long_verbose_fields",
+    "admin_views.tests.SeleniumTests.test_collapsible_fieldset",
+    "admin_views.tests.SeleniumTests.test_first_field_focus",
+    "admin_views.tests.SeleniumTests.test_form_errors_render_layout",
+    "admin_views.tests.SeleniumTests.test_hidden_fields_small_window",
+    "admin_views.tests.SeleniumTests.test_inline_uuid_pk_add_with_popup",
+    "admin_views.tests.SeleniumTests.test_inline_uuid_pk_delete_with_popup",
+    "admin_views.tests.SeleniumTests.test_inline_uuid_pk_edit_with_popup",
+    "admin_views.tests.SeleniumTests.test_inline_with_popup_cancel_delete",
+    "admin_views.tests.SeleniumTests.test_input_element_font",
+    "admin_views.tests.SeleniumTests.test_list_editable_popups",
+    "admin_views.tests.SeleniumTests.test_list_editable_raw_id_fields",
+    "admin_views.tests.SeleniumTests.test_list_editable_with_filter",
+    "admin_views.tests.SeleniumTests.test_login_button_centered",
+    "admin_views.tests.SeleniumTests.test_long_header_with_object_tools_layout",
+    "admin_views.tests.SeleniumTests.test_messages",
+    "admin_views.tests.SeleniumTests.test_object_tools",
+    "admin_views.tests.SeleniumTests.test_pagination_layout",
+    "admin_views.tests.SeleniumTests.test_populate_existing_object",
+    "admin_views.tests.SeleniumTests.test_prepopulated_fields",
+    "admin_views.tests.SeleniumTests.test_redirect_on_add_view_add_another_button",
+    "admin_views.tests.SeleniumTests.test_redirect_on_add_view_continue_button",
+    "admin_views.tests.SeleniumTests.test_related_popup_incorrect_close",
+    "admin_views.tests.SeleniumTests.test_related_popup_index",
+    "admin_views.tests.SeleniumTests.test_search_input_filtered_page",
+    "admin_views.tests.SeleniumTests.test_selectbox_height_collapsible_fieldset",
+    "admin_views.tests.SeleniumTests.test_selectbox_height_not_collapsible_fieldset",
+    "admin_views.tests.SeleniumTests.test_selectbox_selected_rows",
+    "admin_views.tests.SeleniumTests.test_updating_related_objects_updates_fk_selects_except_autocompletes",
+    "admin_views.tests.SeleniumTests.test_use_fieldset_fields_render",
+    "admin_views.tests.SeleniumTests.test_use_fieldset_with_grouped_fields"
+  ],
+  "graded_runtime_sec": 17.69,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

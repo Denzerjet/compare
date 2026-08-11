@@ -1,0 +1,28 @@
+commit ba70e1bcdd8dc879c7d5fc7a3d12b5831eb08540
+Author: Lier0102 <minehammer26@gmail.com>
+Date:   Sun May 17 20:15:39 2026 +0900
+
+    Fixed #37103 -- Made HttpRequest.body handle malformed CONTENT_LENGTH.
+
+diff --git a/django/http/request.py b/django/http/request.py
+index 44bf09450b..28208d57a9 100644
+--- a/django/http/request.py
++++ b/django/http/request.py
+@@ -404,10 +404,16 @@ class HttpRequest:
+                     "You cannot access body after reading from request's data stream"
+                 )
+ 
++            # Make Content-Length fall back to 0 if malformed (e.g. ASGIRequest
++            # comma-joins duplicate Content-Length headers).
++            try:
++                content_length = int(self.META.get("CONTENT_LENGTH") or 0)
++            except (ValueError, TypeError):
++                content_length = 0
+             # Limit the maximum request data size that will be handled
+             # in-memory. Reject early when Content-Length is present and
+             # already exceeds the limit, avoiding reading the body at all.
+-            self._check_data_too_big(int(self.META.get("CONTENT_LENGTH") or 0))
++            self._check_data_too_big(content_length)
+ 
+             # Content-Length can be absent or understated (e.g.
+             # `Transfer-Encoding: chunked` on ASGI), so for seekable

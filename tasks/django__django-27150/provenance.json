@@ -1,0 +1,38 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "3157285e27a426530ef571855e0e29c317e210df",
+  "base_commit": "8d326336c5fba4740114fea5294a7b426c96d65c",
+  "commit_date": "2026-04-14",
+  "subject": "Fixed #27150 -- Made base File objects truthy by default.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/27150",
+  "source_files": [
+    "django/core/files/base.py",
+    "django/core/files/uploadedfile.py",
+    "django/db/models/fields/files.py"
+  ],
+  "test_files": [
+    "tests/files/tests.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "files.tests"
+  ],
+  "narrowed_test_labels": [
+    "files.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.41,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

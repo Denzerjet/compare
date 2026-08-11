@@ -1,0 +1,48 @@
+commit a284a49153f005f2a7af087025e5112ba06cbd5f
+Author: Anže Pečar <anze@pecar.me>
+Date:   Sat Apr 18 14:54:55 2026 +0300
+
+    Fixed #37047 -- Fixed crash in Query.orderby_issubset_groupby for descending and random order_by strings.
+    
+    Run this example:
+    
+    ```python
+    User.objects.values("is_staff").annotate(latest=Max("date_joined")).order_by("-latest").count()
+    ```
+    
+    You should see the following exception:
+    
+    ```
+    django.core.exceptions.FieldError: Cannot resolve keyword '-latest' into field.
+    ```
+    
+    Regression in 2ce5cb0f7a4618dfdc5f5c10e53e2e9b9543d298.
+
+diff --git a/django/db/models/sql/query.py b/django/db/models/sql/query.py
+index 8be560856b..45192b7809 100644
+--- a/django/db/models/sql/query.py
++++ b/django/db/models/sql/query.py
+@@ -2376,14 +2376,15 @@ class Query(BaseExpression):
+             return True
+         # Don't pollute the original query (might disrupt joins).
+         q = self.clone()
+-        order_by_set = {
+-            (
+-                order_by.resolve_expression(q)
+-                if hasattr(order_by, "resolve_expression")
+-                else F(order_by).resolve_expression(q)
+-            )
+-            for order_by in q.order_by
+-        }
++        order_by_set = set()
++        for order_by in q.order_by:
++            if hasattr(order_by, "resolve_expression"):
++                order_by_set.add(order_by.resolve_expression(q))
++            elif order_by == "?":
++                # Random ordering can't be compared against group by.
++                return False
++            else:
++                order_by_set.add(F(order_by.removeprefix("-")).resolve_expression(q))
+         return order_by_set.issubset(self.group_by)
+ 
+     def clear_ordering(self, force=False, clear_default=True):

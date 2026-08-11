@@ -1,0 +1,19 @@
+commit c2517faff335f683e1cbe55d9844910b3fb40670
+Author: Vishy <vis.pypi@gmail.com>
+Date:   Mon Jul 6 09:27:02 2026 -0400
+
+    Fixed #37198 -- Fixed content_disposition_header() quoting of filenames ending with newlines.
+
+diff --git a/tests/utils_tests/test_http.py b/tests/utils_tests/test_http.py
+index f7525885c2..82ce147213 100644
+--- a/tests/utils_tests/test_http.py
++++ b/tests/utils_tests/test_http.py
+@@ -644,6 +644,8 @@ class ContentDispositionHeaderTests(unittest.TestCase):
+                 "attachment; filename*=utf-8''%22esp%C3%A9cimen%22%20filename",
+             ),
+             ((True, "some\nfile"), "attachment; filename*=utf-8''some%0Afile"),
++            ((True, "\n"), "attachment; filename*=utf-8''%0A"),
++            ((True, "example\n"), "attachment; filename*=utf-8''example%0A"),
+         )
+ 
+         for (is_attachment, filename), expected in tests:

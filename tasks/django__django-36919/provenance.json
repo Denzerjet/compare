@@ -1,0 +1,38 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "8c8b833d32c02d3ae6f43b04bb1e45968796b402",
+  "base_commit": "02a7d43d02e2acc9325a5a27eb01ffe7dbba5c7f",
+  "commit_date": "2026-04-30",
+  "subject": "Fixed #36919 -- Allowed Task and TaskResult to be pickled.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36919",
+  "source_files": [
+    "django/tasks/base.py"
+  ],
+  "test_files": [
+    "tests/tasks/test_tasks.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "tasks.test_tasks"
+  ],
+  "narrowed_test_labels": [
+    "tasks.test_tasks"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.38,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [
+      "and `Task`"
+    ],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

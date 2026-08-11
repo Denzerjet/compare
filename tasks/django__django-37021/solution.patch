@@ -1,0 +1,26 @@
+commit e2abe321a6f1370e05c1a89a742125c9eafcac8c
+Author: mariatta <mariatta.wijaya@gmail.com>
+Date:   Fri Apr 3 11:44:02 2026 -0700
+
+    Fixed #37021 -- Added Permission.user_perm_str property.
+    
+    For use in checking user permissions via has_perm().
+    
+    Co-authored-by: 사재혁 <jaehyuck.sa.dev@gmail.com>
+
+diff --git a/django/contrib/auth/models.py b/django/contrib/auth/models.py
+index 7b7dee78fc..f41ece7ce8 100644
+--- a/django/contrib/auth/models.py
++++ b/django/contrib/auth/models.py
+@@ -79,6 +79,11 @@ class Permission(models.Model):
+     def __str__(self):
+         return "%s | %s" % (self.content_type, self.name)
+ 
++    @property
++    def user_perm_str(self):
++        """String representation for the user permission check."""
++        return f"{self.content_type.app_label}.{self.codename}"
++
+     def natural_key(self):
+         return (self.codename, *self.content_type.natural_key())
+ 

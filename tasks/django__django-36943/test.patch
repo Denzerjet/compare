@@ -1,0 +1,31 @@
+commit 3483bfc0920b0ef0b28563aabe8ff546699b6ece
+Author: varunkasyap <varunkasyap@hotmail.com>
+Date:   Tue Mar 3 19:10:51 2026 +0530
+
+    Fixed #36943 -- Preserved any exception from URLconf module in autoreloader.
+    
+    Co-authored-by: Jacob Walls <jacobtylerwalls@gmail.com>
+
+diff --git a/tests/utils_tests/test_autoreload.py b/tests/utils_tests/test_autoreload.py
+index c9e6443c6f..2033728da8 100644
+--- a/tests/utils_tests/test_autoreload.py
++++ b/tests/utils_tests/test_autoreload.py
+@@ -434,6 +434,18 @@ class TestCheckErrors(SimpleTestCase):
+                 autoreload._exception = None
+         self.assertEqual(mocked_error_files.append.call_count, 1)
+ 
++    def test_urlconf_exception_is_used_as_cause(self):
++        urlconf_exc = ValueError("Error")
++        fake_method = mock.MagicMock(side_effect=RuntimeError())
++        wrapped = autoreload.check_errors(fake_method)
++        with mock.patch.object(autoreload, "_url_module_exception", urlconf_exc):
++            try:
++                with self.assertRaises(RuntimeError) as cm:
++                    wrapped()
++            finally:
++                autoreload._exception = None
++        self.assertIs(cm.exception.__cause__, urlconf_exc)
++
+ 
+ class TestRaiseLastException(SimpleTestCase):
+     @mock.patch("django.utils.autoreload._exception", None)

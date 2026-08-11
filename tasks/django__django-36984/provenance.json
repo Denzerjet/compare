@@ -1,0 +1,63 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "57c8c8b107248a3358dd26276ac497c577454011",
+  "base_commit": "a2348c85fc6c20087935c74cd99340dd4ef2dcdc",
+  "commit_date": "2026-06-05",
+  "subject": "Fixed #36984 -- Made inline formset error messages respect delete_confirmation_max_display.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36984",
+  "source_files": [
+    "django/contrib/admin/checks.py",
+    "django/contrib/admin/options.py"
+  ],
+  "test_files": [
+    "tests/admin_inlines/admin.py",
+    "tests/admin_inlines/models.py",
+    "tests/admin_inlines/tests.py",
+    "tests/modeladmin/test_checks.py"
+  ],
+  "dropped_files": [
+    "AUTHORS",
+    "docs/ref/checks.txt",
+    "docs/ref/contrib/admin/index.txt",
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "admin_inlines.tests",
+    "modeladmin.test_checks"
+  ],
+  "narrowed_test_labels": [
+    "admin_inlines.tests",
+    "modeladmin.test_checks"
+  ],
+  "skipped_tests": [
+    "admin_inlines.tests.SeleniumTests.test_add_inline_link_absent_for_view_only_parent_model",
+    "admin_inlines.tests.SeleniumTests.test_add_inlines",
+    "admin_inlines.tests.SeleniumTests.test_add_stackeds",
+    "admin_inlines.tests.SeleniumTests.test_added_stacked_inline_with_collapsed_fields",
+    "admin_inlines.tests.SeleniumTests.test_collapsed_inlines",
+    "admin_inlines.tests.SeleniumTests.test_delete_inlines",
+    "admin_inlines.tests.SeleniumTests.test_delete_invalid_stacked_inlines",
+    "admin_inlines.tests.SeleniumTests.test_delete_invalid_tabular_inlines",
+    "admin_inlines.tests.SeleniumTests.test_delete_stackeds",
+    "admin_inlines.tests.SeleniumTests.test_inline_formset_error",
+    "admin_inlines.tests.SeleniumTests.test_inline_formset_error_input_border",
+    "admin_inlines.tests.SeleniumTests.test_inlines_verbose_name",
+    "admin_inlines.tests.SeleniumTests.test_tabular_inline_delete_layout",
+    "admin_inlines.tests.SeleniumTests.test_tabular_inline_layout",
+    "admin_inlines.tests.SeleniumTests.test_tabular_inline_m2m_widget_option_bg",
+    "admin_inlines.tests.SeleniumTests.test_tabular_inline_object_with_show_change_link",
+    "admin_inlines.tests.SeleniumTests.test_tabular_inline_with_filter_horizontal"
+  ],
+  "graded_runtime_sec": 3.32,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

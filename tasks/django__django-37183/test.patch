@@ -1,0 +1,89 @@
+commit 67c407585ccdc01b76d78e33c082f23d46346747
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Tue Jun 23 12:13:40 2026 -0400
+
+    Fixed #37183 -- Prevented writing control characters into XML attributes.
+    
+    `SimplerXMLGenerator` already rejected control characters (unsupported
+    in XML 1.0) in element content, but attribute values were written
+    unchecked, so unsanitized input could still produce an unparseable
+    XML document. The existing check now runs over attribute values in
+    `startElement()`. This covers both syndication feeds, where item data
+    may flow into attributes such as `Atom` category terms, and the XML
+    serializer, which wraps the error to identify the offending object.
+
+diff --git a/tests/serializers/test_xml.py b/tests/serializers/test_xml.py
+index 884746dfac..6235173c99 100644
+--- a/tests/serializers/test_xml.py
++++ b/tests/serializers/test_xml.py
+@@ -4,6 +4,7 @@ from django.core import serializers
+ from django.core.serializers.xml_serializer import DTDForbidden
+ from django.test import TestCase, TransactionTestCase
+ 
++from .models import Actor
+ from .tests import SerializersTestBase, SerializersTransactionTestBase
+ 
+ 
+@@ -79,6 +80,12 @@ class XmlSerializerTestCase(SerializersTestBase, TestCase):
+             serializers.serialize(self.serializer_name, [self.a1]),
+         )
+ 
++    def test_control_char_failure_attribute(self):
++        actor = Actor.objects.create(pk="\u0001")
++        msg = "Actor (pk:%s) contains unserializable characters" % actor.pk
++        with self.assertRaisesMessage(ValueError, msg):
++            serializers.serialize(self.serializer_name, [actor])
++
+     def test_no_dtd(self):
+         """
+         The XML deserializer shouldn't allow a DTD.
+diff --git a/tests/syndication_tests/feeds.py b/tests/syndication_tests/feeds.py
+index 56e540c633..5b884755b5 100644
+--- a/tests/syndication_tests/feeds.py
++++ b/tests/syndication_tests/feeds.py
+@@ -321,3 +321,9 @@ class TestMultipleEnclosureAtomFeed(TestAtomFeed):
+             feedgenerator.Enclosure("http://example.com/hello.png", "0", "image/png"),
+             feedgenerator.Enclosure("http://example.com/goodbye.png", "0", "image/png"),
+         ]
++
++
++class TestInvalidAtomFeed(TestAtomFeed):
++    def item_categories(self):
++        # This control character is not serializable.
++        return ["\x00"]
+diff --git a/tests/syndication_tests/tests.py b/tests/syndication_tests/tests.py
+index 739139db63..859c61dbf1 100644
+--- a/tests/syndication_tests/tests.py
++++ b/tests/syndication_tests/tests.py
+@@ -17,6 +17,7 @@ from django.utils.feedgenerator import (
+     rfc2822_date,
+     rfc3339_date,
+ )
++from django.utils.xmlutils import UnserializableContentError
+ 
+ from .models import Article, Entry
+ 
+@@ -526,6 +527,11 @@ class SyndicationFeedTest(FeedTestCase):
+                 title = item.getElementsByTagName("title")[0]
+                 self.assertEqual(title.firstChild.wholeText, "A &amp; B &lt; C &gt; D")
+ 
++    def test_no_control_chars_in_attributes(self):
++        msg = "Control characters are not supported in XML 1.0"
++        with self.assertRaisesMessage(UnserializableContentError, msg):
++            self.client.get("/syndication/atom/invalid/")
++
+     def test_naive_datetime_conversion(self):
+         """
+         Datetimes are correctly converted to the local time zone.
+diff --git a/tests/syndication_tests/urls.py b/tests/syndication_tests/urls.py
+index bb1d3d990d..3a0d0ff074 100644
+--- a/tests/syndication_tests/urls.py
++++ b/tests/syndication_tests/urls.py
+@@ -41,6 +41,7 @@ urlpatterns = [
+     path("syndication/rss2/multiple-enclosure/", feeds.TestMultipleEnclosureRSSFeed()),
+     path("syndication/atom/single-enclosure/", feeds.TestSingleEnclosureAtomFeed()),
+     path("syndication/atom/multiple-enclosure/", feeds.TestMultipleEnclosureAtomFeed()),
++    path("syndication/atom/invalid/", feeds.TestInvalidAtomFeed()),
+     path(
+         "syndication/stylesheet.xsl",
+         lambda request: None,

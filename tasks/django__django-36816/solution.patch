@@ -1,0 +1,57 @@
+commit e27f23b268c520957384054fb236cfc303f95f51
+Author: Nilesh Kumar Pahari <nileshpahari@protonmail.com>
+Date:   Mon Apr 6 23:48:30 2026 +0530
+
+    Fixed #36816 -- Allowed **kwargs in @task decorator.
+    
+    The decorator was updated to accept **kwargs and forward them to
+    task_class, allowing additional parameters to be passed to custom
+    Task subclasses.
+
+diff --git a/django/tasks/base.py b/django/tasks/base.py
+index bb37838d2f..94eb29f2ea 100644
+--- a/django/tasks/base.py
++++ b/django/tasks/base.py
+@@ -43,11 +43,11 @@ class TaskResultStatus(TextChoices):
+ 
+ @dataclass(frozen=True, slots=True, kw_only=True)
+ class Task:
+-    priority: int
+     func: Callable[..., Any]  # The Task function.
+-    backend: str
+-    queue_name: str
+-    run_after: datetime | None  # The earliest this Task will run.
++    priority: int = DEFAULT_TASK_PRIORITY
++    backend: str = DEFAULT_TASK_BACKEND_ALIAS
++    queue_name: str = DEFAULT_TASK_QUEUE_NAME
++    run_after: datetime | None = None  # The earliest this Task will run.
+ 
+     # Whether the Task receives the Task context when executed.
+     takes_context: bool = False
+@@ -138,17 +138,24 @@ def task(
+     queue_name=DEFAULT_TASK_QUEUE_NAME,
+     backend=DEFAULT_TASK_BACKEND_ALIAS,
+     takes_context=False,
++    **kwargs,
+ ):
+     from . import task_backends
+ 
++    if "run_after" in kwargs:
++        raise TypeError(
++            "run_after cannot be defined statically with the @task decorator. "
++            "Use .using(run_after=...) to set it dynamically."
++        )
++
+     def wrapper(f):
+         return task_backends[backend].task_class(
+-            priority=priority,
+             func=f,
++            priority=priority,
+             queue_name=queue_name,
+             backend=backend,
+             takes_context=takes_context,
+-            run_after=None,
++            **kwargs,
+         )
+ 
+     if function:

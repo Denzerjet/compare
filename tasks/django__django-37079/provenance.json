@@ -1,0 +1,55 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "0147222691db284f87c8c2a64ac6b1eded034c49",
+  "base_commit": "f8c0a9321f07c4bbb338da59d57c38878c85d1f0",
+  "commit_date": "2026-05-04",
+  "subject": "Fixed #37079 -- Fixed specialization of header lookups in RemoteUserMiddleware.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37079",
+  "source_files": [
+    "django/contrib/auth/middleware.py"
+  ],
+  "test_files": [
+    "tests/auth_tests/test_remote_user.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "auth_tests.test_remote_user"
+  ],
+  "narrowed_test_labels": [
+    "auth_tests.test_remote_user"
+  ],
+  "skipped_tests": [
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_csrf_validation_passes_after_process_request_login",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_header_disappears",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_inactive_user",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_known_user",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_last_login",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_no_remote_user",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_passing_explicit_none",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_unknown_user",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_user_switch_forces_new_login",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_csrf_validation_passes_after_process_request_login",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_header_disappears",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_inactive_user",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_known_user",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_last_login",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_no_remote_user",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_passing_explicit_none",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_unknown_user",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_user_switch_forces_new_login"
+  ],
+  "graded_runtime_sec": 2.15,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

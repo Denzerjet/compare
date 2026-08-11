@@ -1,0 +1,19 @@
+commit 820c7d3248af6afbdf3390c97b29e41ba126a421
+Author: garybadwal <gurpreet071999@gmail.com>
+Date:   Thu Apr 16 11:46:13 2026 +0530
+
+    Fixed #37036 -- Added missing flat=True arg in DeferredAttribute.fetch_many().
+
+diff --git a/django/db/models/query_utils.py b/django/db/models/query_utils.py
+index a17274fba0..c282c4f744 100644
+--- a/django/db/models/query_utils.py
++++ b/django/db/models/query_utils.py
+@@ -296,7 +296,7 @@ class DeferredAttribute:
+         db = instances[0]._state.db
+         value_by_pk = (
+             self.field.model._base_manager.using(db)
+-            .values_list(attname)
++            .values_list(attname, flat=True)
+             .in_bulk({i.pk for i in instances})
+         )
+         for instance in instances:

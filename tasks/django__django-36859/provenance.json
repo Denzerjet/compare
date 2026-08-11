@@ -1,0 +1,39 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "0ed8d4e7d1029e1283b04f70d51d2af96ad85d6a",
+  "base_commit": "4b2edb3418851c09dd839f1a2cba74051fe9d420",
+  "commit_date": "2026-03-16",
+  "subject": "Fixed #36859 -- Made assertContains and assertNotContains idempotent for streaming responses.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36859",
+  "source_files": [
+    "django/test/testcases.py"
+  ],
+  "test_files": [
+    "tests/test_utils/tests.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "test_utils.tests"
+  ],
+  "narrowed_test_labels": [
+    "test_utils.tests"
+  ],
+  "skipped_tests": [
+    "test_utils.tests.AssertNumQueriesUponConnectionTests.test_ignores_connection_configuration_queries",
+    "test_utils.tests.SkippingExtraTests.test_fixtures_are_skipped"
+  ],
+  "graded_runtime_sec": 1.74,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

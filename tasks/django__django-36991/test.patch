@@ -1,0 +1,56 @@
+commit dc467fdc3b5744cec71fab876c23a14013e2510b
+Author: Dinesh <dineshthumma15@gmail.com>
+Date:   Sat Mar 21 22:51:11 2026 +0530
+
+    Fixed #36991 -- Raised BadRequest for invalid encodings in Content-Type headers.
+
+diff --git a/tests/requests_tests/tests.py b/tests/requests_tests/tests.py
+index b15d954cb3..c25dd913cf 100644
+--- a/tests/requests_tests/tests.py
++++ b/tests/requests_tests/tests.py
+@@ -456,6 +456,20 @@ class RequestsTests(SimpleTestCase):
+         with self.assertRaises(RawPostDataException):
+             request.body
+ 
++    def test_malformed_header(self):
++        tests = [
++            # Invalid encoding name with percent-encoded value
++            "text/plain; charset*=BOGUS''%20",
++            # Another invalid encoding with different value
++            "text/plain; filename*=INVALID''%s%s%s",
++            # Invalid encoding with multi-line encoded content
++            "text/plain; title*=NOTACODEC''%E2%80%A6",
++        ]
++        msg = "Invalid Content-Type header."
++        for header in tests:
++            with self.subTest(header=header), self.assertRaisesMessage(BadRequest, msg):
++                WSGIRequest({"REQUEST_METHOD": "GET", "CONTENT_TYPE": header})
++
+     def test_malformed_multipart_header(self):
+         tests = [
+             ('Content-Disposition : form-data; name="name"', {"name": ["value"]}),
+diff --git a/tests/utils_tests/test_http.py b/tests/utils_tests/test_http.py
+index 58a4b40f3e..f18deb7c70 100644
+--- a/tests/utils_tests/test_http.py
++++ b/tests/utils_tests/test_http.py
+@@ -521,6 +521,20 @@ class ParseHeaderParameterTests(unittest.TestCase):
+             parsed = parse_header_parameters(raw_line)
+             self.assertEqual(parsed[1]["title"], expected_title)
+ 
++    def test_rfc2231_invalid_encoding(self):
++        test_data = [
++            # Invalid encoding name with percent-encoded value
++            "text/plain; charset*=BOGUS''%20",
++            # Another invalid encoding with different value
++            "text/plain; filename*=INVALID''%s%s%s",
++            # Invalid encoding with multi-line encoded content
++            "text/plain; title*=NOTACODEC''%E2%80%A6",
++        ]
++        msg = "Invalid encoding"
++        for header in test_data:
++            with self.subTest(raw_line=header), self.assertRaisesRegex(ValueError, msg):
++                parse_header_parameters(header)
++
+     def test_header_max_length(self):
+         base_header = "Content-Type: application/x-stuff; title*="
+         base_header_len = len(base_header)

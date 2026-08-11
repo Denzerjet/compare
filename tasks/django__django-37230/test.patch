@@ -1,0 +1,38 @@
+commit 92470ad3742524902b29769d2c822dbe791630db
+Author: Zubair Hassan <zubairhassan652@gmail.com>
+Date:   Sun Jul 26 16:35:02 2026 +0500
+
+    Fixed #37230 -- Fixed a crash for second-degree relations in ModelAdmin.list_display.
+    
+    Thanks Rob Kuipers for the report.
+    
+    Regression in 4b2b4bf0ac2707dc9c4d51cabfa72168eaea95fe.
+    
+    Co-authored-by: Jacob Walls <jacobtylerwalls@gmail.com>
+
+diff --git a/tests/admin_utils/models.py b/tests/admin_utils/models.py
+index 55810f0b50..59b4eab5c6 100644
+--- a/tests/admin_utils/models.py
++++ b/tests/admin_utils/models.py
+@@ -5,6 +5,9 @@ from django.utils.translation import gettext_lazy as _
+ 
+ class Site(models.Model):
+     domain = models.CharField(max_length=100)
++    parent = models.ForeignKey(
++        "self", models.CASCADE, related_name="children", blank=True, null=True
++    )
+ 
+     def __str__(self):
+         return self.domain
+diff --git a/tests/admin_utils/tests.py b/tests/admin_utils/tests.py
+index 15b09ca812..a043939336 100644
+--- a/tests/admin_utils/tests.py
++++ b/tests/admin_utils/tests.py
+@@ -164,6 +164,7 @@ class UtilsTests(SimpleTestCase):
+             ("test_from_model", article.test_from_model()),
+             ("non_field", INSTANCE_ATTRIBUTE),
+             ("site__domain", SITE_NAME),
++            ("site__parent", None),
+         )
+ 
+         mock_admin = MockModelAdmin()

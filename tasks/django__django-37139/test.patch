@@ -1,0 +1,146 @@
+commit a2348c85fc6c20087935c74cd99340dd4ef2dcdc
+Author: Mariusz Felisiak <felisiak.mariusz@gmail.com>
+Date:   Fri Jun 5 12:10:10 2026 +0200
+
+    Fixed #37139 -- Fixed inlines crash on parent models with db_default on primary key.
+
+diff --git a/tests/basic/tests.py b/tests/basic/tests.py
+index ed655833e2..a81724b70f 100644
+--- a/tests/basic/tests.py
++++ b/tests/basic/tests.py
+@@ -554,6 +554,7 @@ class ModelTest(TestCase):
+         cases = [
+             Article(),
+             Article(id=None),
++            PrimaryKeyWithDbDefault(),
+         ]
+         for case in cases:
+             with self.subTest(case=case):
+diff --git a/tests/composite_pk/models/__init__.py b/tests/composite_pk/models/__init__.py
+index 5996ae33b0..ec5e914b41 100644
+--- a/tests/composite_pk/models/__init__.py
++++ b/tests/composite_pk/models/__init__.py
+@@ -1,8 +1,9 @@
+-from .tenant import Comment, Post, Tenant, TimeStamped, Token, User
++from .tenant import Comment, Post, PostDbDefault, Tenant, TimeStamped, Token, User
+ 
+ __all__ = [
+     "Comment",
+     "Post",
++    "PostDbDefault",
+     "Tenant",
+     "TimeStamped",
+     "Token",
+diff --git a/tests/composite_pk/models/tenant.py b/tests/composite_pk/models/tenant.py
+index 65eb0feae8..4aff6d360e 100644
+--- a/tests/composite_pk/models/tenant.py
++++ b/tests/composite_pk/models/tenant.py
+@@ -55,6 +55,12 @@ class Post(models.Model):
+     id = models.UUIDField(default=uuid.uuid4)
+ 
+ 
++class PostDbDefault(models.Model):
++    pk = models.CompositePrimaryKey("tenant_id", "id")
++    tenant = models.ForeignKey(Tenant, on_delete=models.CASCADE, default=1)
++    id = models.IntegerField(db_default=1)
++
++
+ class TimeStamped(models.Model):
+     pk = models.CompositePrimaryKey("id", "created")
+     id = models.SmallIntegerField(unique=True)
+diff --git a/tests/composite_pk/tests.py b/tests/composite_pk/tests.py
+index 264a1bb7c2..4284f9d627 100644
+--- a/tests/composite_pk/tests.py
++++ b/tests/composite_pk/tests.py
+@@ -17,7 +17,7 @@ from django.db.models import CompositePrimaryKey
+ from django.forms import modelform_factory
+ from django.test import TestCase
+ 
+-from .models import Comment, Post, Tenant, TimeStamped, Token, User
++from .models import Comment, Post, PostDbDefault, Tenant, TimeStamped, Token, User
+ 
+ 
+ class CommentForm(forms.ModelForm):
+@@ -64,6 +64,12 @@ class CompositePKTests(TestCase):
+         self.assertIsNone(user.id)
+         self.assertIs(user._is_pk_set(), False)
+ 
++    def test_pk_not_set_db_default(self):
++        post = PostDbDefault(tenant=self.tenant)
++        self.assertEqual(post.tenant_id, self.tenant.pk)
++        self.assertIsNotNone(post.id)
++        self.assertIs(post._is_pk_set(), False)
++
+     def test_hash(self):
+         self.assertEqual(hash(User(pk=(1, 2))), hash((1, 2)))
+         self.assertEqual(hash(User(tenant_id=2, id=3)), hash((2, 3)))
+diff --git a/tests/inline_formsets/models.py b/tests/inline_formsets/models.py
+index a090387c42..ccada27e4c 100644
+--- a/tests/inline_formsets/models.py
++++ b/tests/inline_formsets/models.py
+@@ -1,4 +1,5 @@
+ from django.db import models
++from django.db.models.functions import UUID4
+ 
+ 
+ class School(models.Model):
+@@ -21,6 +22,27 @@ class Child(models.Model):
+         ]
+ 
+ 
++class ParentUUIDPk(models.Model):
++    uuid = models.UUIDField(primary_key=True, db_default=UUID4(), editable=False)
++
++    class Meta:
++        required_db_features = {
++            "supports_uuid4_function",
++            "supports_expression_defaults",
++        }
++
++
++class ChildUUIDPk(models.Model):
++    parent = models.ForeignKey(ParentUUIDPk, models.CASCADE)
++    name = models.CharField(max_length=100)
++
++    class Meta:
++        required_db_features = {
++            "supports_uuid4_function",
++            "supports_expression_defaults",
++        }
++
++
+ class Poet(models.Model):
+     name = models.CharField(max_length=100)
+ 
+diff --git a/tests/inline_formsets/tests.py b/tests/inline_formsets/tests.py
+index eaabc350b4..78456ec514 100644
+--- a/tests/inline_formsets/tests.py
++++ b/tests/inline_formsets/tests.py
+@@ -1,7 +1,7 @@
+ from django.forms.models import ModelForm, inlineformset_factory
+ from django.test import TestCase, skipUnlessDBFeature
+ 
+-from .models import Child, Parent, Poem, Poet, School
++from .models import Child, ChildUUIDPk, Parent, ParentUUIDPk, Poem, Poet, School
+ 
+ 
+ class DeletionTests(TestCase):
+@@ -113,6 +113,18 @@ class DeletionTests(TestCase):
+             obj.save()
+         self.assertEqual(school.child_set.count(), 1)
+ 
++    @skipUnlessDBFeature("supports_uuid4_function", "supports_expression_defaults")
++    def test_add_form_uuid_pk(self):
++        ChildFormSet = inlineformset_factory(ParentUUIDPk, ChildUUIDPk, fields=["name"])
++        data = {
++            "child_set-TOTAL_FORMS": "1",
++            "child_set-INITIAL_FORMS": "1",
++            "child_set-MAX_NUM_FORMS": "0",
++            "child_set-0-name": "child",
++        }
++        formset = ChildFormSet(data)
++        self.assertIs(formset.is_valid(), False)
++
+ 
+ class InlineFormsetFactoryTest(TestCase):
+     def test_inline_formset_factory(self):

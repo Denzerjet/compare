@@ -1,0 +1,34 @@
+commit a486b48d4ea0d34babe58cae215b2123748aacbd
+Author: vismaytiwari <vismay.t@gmail.com>
+Date:   Thu Jul 9 11:15:01 2026 +0530
+
+    Fixed #37210 -- Logged cached_db session cache delete failures.
+
+diff --git a/django/contrib/sessions/backends/cached_db.py b/django/contrib/sessions/backends/cached_db.py
+index 2195f57acc..a81d5789f2 100644
+--- a/django/contrib/sessions/backends/cached_db.py
++++ b/django/contrib/sessions/backends/cached_db.py
+@@ -109,7 +109,10 @@ class SessionStore(DBStore):
+             if self.session_key is None:
+                 return
+             session_key = self.session_key
+-        self._cache.delete(self.cache_key_prefix + session_key)
++        try:
++            self._cache.delete(self.cache_key_prefix + session_key)
++        except Exception:
++            logger.exception("Error deleting from cache (%s)", self._cache)
+ 
+     async def adelete(self, session_key=None):
+         await super().adelete(session_key)
+@@ -117,7 +120,10 @@ class SessionStore(DBStore):
+             if self.session_key is None:
+                 return
+             session_key = self.session_key
+-        await self._cache.adelete(self.cache_key_prefix + session_key)
++        try:
++            await self._cache.adelete(self.cache_key_prefix + session_key)
++        except Exception:
++            logger.exception("Error deleting from cache (%s)", self._cache)
+ 
+     def flush(self):
+         """

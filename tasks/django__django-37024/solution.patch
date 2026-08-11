@@ -1,0 +1,49 @@
+commit 179aa21b6dfeb9a0560a8c2bbfcf056301fc619f
+Author: Tim Graham <timograham@gmail.com>
+Date:   Sun Apr 19 02:04:22 2026 -0400
+
+    Fixed #37024 -- Made SITE_ID system check validation use Site._meta.pk.
+
+diff --git a/django/contrib/sites/checks.py b/django/contrib/sites/checks.py
+index 66e8551bed..bf7c9b7dce 100644
+--- a/django/contrib/sites/checks.py
++++ b/django/contrib/sites/checks.py
+@@ -1,14 +1,30 @@
+-from types import NoneType
+-
+ from django.conf import settings
+ from django.core.checks import Error
++from django.core.exceptions import ValidationError
+ 
+ 
+ def check_site_id(app_configs, **kwargs):
+-    if hasattr(settings, "SITE_ID") and not isinstance(
+-        settings.SITE_ID, (NoneType, int)
+-    ):
+-        return [
+-            Error("The SITE_ID setting must be an integer", id="sites.E101"),
+-        ]
++    # Inner import avoids AppRegistryNotReady
++    from django.contrib.sites.models import Site
++
++    if hasattr(settings, "SITE_ID"):
++        try:
++            site_id = Site._meta.pk.to_python(settings.SITE_ID)
++        except ValidationError as exc:
++            return [
++                Error(
++                    f"The SITE_ID setting failed to validate: {exc}.", id="sites.E101"
++                ),
++            ]
++        else:
++            # to_python() might coerce a SITE_ID of the wrong type to the valid
++            # type, e.g. "1" to 1 for AutoField.
++            if site_id != settings.SITE_ID:
++                expected_type = type(site_id).__name__
++                return [
++                    Error(
++                        f"The SITE_ID setting must be of type {expected_type}.",
++                        id="sites.E101",
++                    ),
++                ]
+     return []

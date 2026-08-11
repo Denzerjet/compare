@@ -1,0 +1,37 @@
+commit 335c6d0129400eda792f3bec5c71bb28af5e5d37
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Tue May 12 15:27:59 2026 -0400
+
+    Fixed #37095 -- Checked maximum redirect lengths against percent-encoded URLs.
+
+diff --git a/tests/httpwrappers/tests.py b/tests/httpwrappers/tests.py
+index b990e9f816..151088909c 100644
+--- a/tests/httpwrappers/tests.py
++++ b/tests/httpwrappers/tests.py
+@@ -24,6 +24,7 @@ from django.http import (
+     parse_cookie,
+ )
+ from django.test import SimpleTestCase
++from django.utils.encoding import iri_to_uri
+ from django.utils.functional import lazystr
+ from django.utils.http import MAX_URL_REDIRECT_LENGTH
+ 
+@@ -498,6 +499,18 @@ class HttpResponseTests(SimpleTestCase):
+                 response = response_class(long_url)
+                 self.assertEqual(response.url, long_url)
+ 
++    def test_redirect_url_max_length_checks_encoded_location(self):
++        long_url = "/" + "é" * (MAX_URL_REDIRECT_LENGTH - 1)
++        self.assertLessEqual(len(long_url), MAX_URL_REDIRECT_LENGTH)
++        self.assertGreater(len(iri_to_uri(long_url)), MAX_URL_REDIRECT_LENGTH)
++        for response_class in (HttpResponseRedirect, HttpResponsePermanentRedirect):
++            msg = f"Unsafe redirect exceeding {MAX_URL_REDIRECT_LENGTH} characters"
++            with (
++                self.subTest(response_class=response_class),
++                self.assertRaisesMessage(DisallowedRedirect, msg),
++            ):
++                response_class(long_url)
++
+     def test_redirect_url_max_length_override_via_param(self):
+         base_url = "https://example.com/"
+         for (max_length, length), response_class in itertools.product(

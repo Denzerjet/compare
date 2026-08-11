@@ -1,0 +1,29 @@
+commit dc4e5461faa390991e6a0f6d3ca47690e8f5c4e1
+Author: Sezer BOZKIR <admin@sezerbozkir.com>
+Date:   Tue Apr 7 11:20:16 2026 +0300
+
+    Fixed #36837 -- Skipped backends not implementing (a)get_user() in (a)force_login().
+    
+    Co-authored-by: Mykhailo Havelia <Arfey17.mg@gmail.com>
+
+diff --git a/django/test/client.py b/django/test/client.py
+index 0f986d5a6c..d499045363 100644
+--- a/django/test/client.py
++++ b/django/test/client.py
+@@ -865,10 +865,15 @@ class ClientMixin:
+ 
+     def _get_backend(self):
+         from django.contrib.auth import load_backend
++        from django.contrib.auth.backends import BaseBackend
++
++        def overrides(backend, name):
++            base = getattr(BaseBackend, name)
++            return getattr(type(backend), name, base) is not base
+ 
+         for backend_path in settings.AUTHENTICATION_BACKENDS:
+             backend = load_backend(backend_path)
+-            if hasattr(backend, "get_user"):
++            if overrides(backend, "get_user") or overrides(backend, "aget_user"):
+                 return backend_path
+ 
+     def _login(self, user, backend=None):

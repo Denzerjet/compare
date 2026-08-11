@@ -1,0 +1,37 @@
+commit 0ed8d4e7d1029e1283b04f70d51d2af96ad85d6a
+Author: Baptiste Mispelon <baptiste.mispelon@torchbox.com>
+Date:   Mon Jan 12 14:51:32 2026 +0100
+
+    Fixed #36859 -- Made assertContains and assertNotContains idempotent for streaming responses.
+
+diff --git a/tests/test_utils/tests.py b/tests/test_utils/tests.py
+index ef1d02cf41..b9c8e2ac58 100644
+--- a/tests/test_utils/tests.py
++++ b/tests/test_utils/tests.py
+@@ -29,7 +29,7 @@ from django.forms import (
+     ValidationError,
+     formset_factory,
+ )
+-from django.http import HttpResponse
++from django.http import HttpResponse, StreamingHttpResponse
+ from django.template import Context, Template
+ from django.template.loader import render_to_string
+ from django.test import (
+@@ -1047,6 +1047,17 @@ class HTMLEqualTests(SimpleTestCase):
+             html=True,
+         )
+ 
++    def test_streaming_response_idempotent(self):
++        response = StreamingHttpResponse(["hello world"])
++        self.assertContains(response, "hello")
++        self.assertContains(response, "world")
++
++    def test_streaming_response_not_contains_idempotent(self):
++        response = StreamingHttpResponse(["hello world"])
++        self.assertNotContains(response, "bye")
++        self.assertNotContains(response, "bye")
++        self.assertContains(response, "world")
++
+ 
+ class InHTMLTests(SimpleTestCase):
+     def test_needle_msg(self):

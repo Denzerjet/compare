@@ -1,0 +1,46 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "4b2b4bf0ac2707dc9c4d51cabfa72168eaea95fe",
+  "base_commit": "2e33abe57c37dce6ce5eff9e6cbaf47cdddcf1e3",
+  "commit_date": "2026-03-18",
+  "subject": "Fixed #36926 -- Made admin use boolean icons for related BooleanFields in list_display.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36926",
+  "source_files": [
+    "django/contrib/admin/utils.py"
+  ],
+  "test_files": [
+    "tests/admin_changelist/models.py",
+    "tests/admin_changelist/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "admin_changelist.tests"
+  ],
+  "narrowed_test_labels": [
+    "admin_changelist.tests"
+  ],
+  "skipped_tests": [
+    "admin_changelist.tests.SeleniumTests.test_actions_warn_on_pending_edits",
+    "admin_changelist.tests.SeleniumTests.test_add_row_selection",
+    "admin_changelist.tests.SeleniumTests.test_collapse_filter_with_unescaped_title",
+    "admin_changelist.tests.SeleniumTests.test_collapse_filters",
+    "admin_changelist.tests.SeleniumTests.test_list_display_ordering",
+    "admin_changelist.tests.SeleniumTests.test_modifier_allows_multiple_section",
+    "admin_changelist.tests.SeleniumTests.test_save_with_changes_warns_on_pending_action",
+    "admin_changelist.tests.SeleniumTests.test_save_without_changes_warns_on_pending_action",
+    "admin_changelist.tests.SeleniumTests.test_select_all_across_pages",
+    "admin_changelist.tests.SeleniumTests.test_selection_counter_is_synced_when_page_is_shown"
+  ],
+  "graded_runtime_sec": 2.23,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

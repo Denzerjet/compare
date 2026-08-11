@@ -1,0 +1,55 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "3483bfc0920b0ef0b28563aabe8ff546699b6ece",
+  "base_commit": "14889d8cead6af22ef71360f26610711997915d1",
+  "commit_date": "2026-03-10",
+  "subject": "Fixed #36943 -- Preserved any exception from URLconf module in autoreloader.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36943",
+  "source_files": [
+    "django/utils/autoreload.py"
+  ],
+  "test_files": [
+    "tests/utils_tests/test_autoreload.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "utils_tests.test_autoreload"
+  ],
+  "narrowed_test_labels": [
+    "utils_tests.test_autoreload"
+  ],
+  "skipped_tests": [
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_check_availability",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_check_availability_lower_version",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_check_server_status",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_check_server_status_raises_error",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_glob",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_glob_recursive",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_multiple_globs",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_multiple_recursive_globs",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_nested_glob_recursive",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_overlapping_glob_recursive",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_overlapping_globs",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_pywatchman_not_available",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_setting_timeout_from_environment_variable",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_update_watches_raises_exceptions",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_watch_glob_ignores_non_existing_directories_two_levels",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_watch_glob_multiple_patterns",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_watch_glob_uses_existing_parent_directories",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_watched_roots_contains_directory_globs",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_watched_roots_contains_files",
+    "utils_tests.test_autoreload.WatchmanReloaderTests.test_watched_roots_contains_sys_path"
+  ],
+  "graded_runtime_sec": 1.8,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "c9ff757a55392b1f50968eb89fe775f6155168d8",
+  "base_commit": "2936a0a99719e3c3777039a0d6968deecb55c752",
+  "commit_date": "2026-07-29",
+  "subject": "Fixed #37234 -- Fixed bulk_create() for late-saved related primary keys.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37234",
+  "source_files": [
+    "django/db/models/query.py"
+  ],
+  "test_files": [
+    "tests/bulk_create/tests.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.0.8.txt"
+  ],
+  "full_test_labels": [
+    "bulk_create.tests"
+  ],
+  "narrowed_test_labels": [
+    "bulk_create.tests"
+  ],
+  "skipped_tests": [
+    "bulk_create.tests.BulkCreateTests.test_ignore_conflicts_value_error",
+    "bulk_create.tests.BulkCreateTests.test_update_conflicts_no_unique_fields",
+    "bulk_create.tests.BulkCreateTests.test_update_conflicts_two_fields_no_unique_fields",
+    "bulk_create.tests.BulkCreateTests.test_update_conflicts_unique_field_unsupported",
+    "bulk_create.tests.BulkCreateTests.test_update_conflicts_unique_two_fields_unique_no_unique_fields",
+    "bulk_create.tests.BulkCreateTests.test_update_conflicts_unsupported",
+    "bulk_create.tests.BulkCreateTests.test_zero_as_autoval"
+  ],
+  "graded_runtime_sec": 1.57,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

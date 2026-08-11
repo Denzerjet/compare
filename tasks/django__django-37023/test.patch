@@ -1,0 +1,22 @@
+commit 33bfc66add643f49d466c5a646989ad91677753d
+Author: Tim Graham <timograham@gmail.com>
+Date:   Sat Apr 4 18:02:17 2026 -0400
+
+    Fixed #37023 -- Made XML serializer put each ManyToManyField object on its own line.
+
+diff --git a/tests/serializers/test_xml.py b/tests/serializers/test_xml.py
+index 0ae66f77d0..884746dfac 100644
+--- a/tests/serializers/test_xml.py
++++ b/tests/serializers/test_xml.py
+@@ -24,7 +24,10 @@ class XmlSerializerTestCase(SerializersTestBase, TestCase):
+     <field name="author" rel="ManyToOneRel" to="serializers.author">%(author_pk)s</field>
+     <field name="headline" type="CharField">Poker has no place on ESPN</field>
+     <field name="pub_date" type="DateTimeField">2006-06-16T11:00:00</field>
+-    <field name="categories" rel="ManyToManyRel" to="serializers.category"><object pk="%(first_category_pk)s"></object><object pk="%(second_category_pk)s"></object></field>
++    <field name="categories" rel="ManyToManyRel" to="serializers.category">
++      <object pk="%(first_category_pk)s"></object>
++      <object pk="%(second_category_pk)s"></object>
++    </field>
+     <field name="meta_data" rel="ManyToManyRel" to="serializers.categorymetadata"></field>
+     <field name="topics" rel="ManyToManyRel" to="serializers.topic"></field>
+   </object>

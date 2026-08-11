@@ -1,0 +1,25 @@
+commit e1df3950b2a3a852dfa9eb70738b7bac28cb0a0e
+Author: Manas225 <manas112madeshiya@gmail.com>
+Date:   Mon Mar 9 22:54:34 2026 +0530
+
+    Fixed #36979 -- Made GenericInlineModelAdmin.get_formset() use get_exclude().
+
+diff --git a/tests/generic_inline_admin/tests.py b/tests/generic_inline_admin/tests.py
+index b4833e54e7..01346f500e 100644
+--- a/tests/generic_inline_admin/tests.py
++++ b/tests/generic_inline_admin/tests.py
+@@ -577,3 +577,14 @@ class GenericInlineModelAdminTest(SimpleTestCase):
+             request.name = name
+             self.assertEqual(ma.get_inlines(request, None), (inline_class,))
+             self.assertEqual(type(ma.get_inline_instances(request)[0]), inline_class)
++
++    def test_get_exclude_is_respected(self):
++        class GetExcludeInline(GenericTabularInline):
++            model = Media
++
++            def get_exclude(self, request, obj=None):
++                return ["url"]
++
++        ma = GetExcludeInline(Media, self.site)
++        formset = ma.get_formset(request)
++        self.assertNotIn("url", formset.form.base_fields)

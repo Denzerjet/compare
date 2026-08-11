@@ -1,0 +1,74 @@
+commit 0147222691db284f87c8c2a64ac6b1eded034c49
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Thu Apr 30 14:53:17 2026 -0400
+
+    Fixed #37079 -- Fixed specialization of header lookups in RemoteUserMiddleware.
+    
+    We need to switch on whether the request is a WSGI or ASGI request to
+    know whether to prepend `HTTP_`: we cannot assume sync exceution means
+    we are running under WSGI, as there could be other sync middleware
+    forcing sync execution under ASGI.
+    
+    Thanks Mykhailo Havelia for the report.
+
+diff --git a/tests/auth_tests/test_remote_user.py b/tests/auth_tests/test_remote_user.py
+index f88d966bad..8c85c65196 100644
+--- a/tests/auth_tests/test_remote_user.py
++++ b/tests/auth_tests/test_remote_user.py
+@@ -1,5 +1,7 @@
+ from datetime import UTC, datetime
+ 
++import asgiref.sync
++
+ from django.conf import settings
+ from django.contrib.auth import aauthenticate, authenticate
+ from django.contrib.auth.backends import RemoteUserBackend
+@@ -14,6 +16,15 @@ from django.test import (
+     modify_settings,
+     override_settings,
+ )
++from django.utils.decorators import sync_only_middleware
++
++
++@sync_only_middleware
++def sync_middleware(get_response):
++    def middleware(request):
++        return get_response(request)
++
++    return middleware
+ 
+ 
+ @override_settings(ROOT_URLCONF="auth_tests.urls")
+@@ -470,6 +481,20 @@ class RemoteUserCustomTest(RemoteUserTest):
+         self.assertEqual(newuser.email, "user@example.com")
+ 
+ 
++class ASGISyncPathRemoteUserTest(RemoteUserTest):
++    """Later sync-only middleware forces sync execution even under ASGI."""
++
++    middleware = [
++        RemoteUserTest.middleware,
++        "auth_tests.test_remote_user.sync_middleware",
++    ]
++
++    def setUp(self):
++        method = getattr(self, self._testMethodName)
++        if not isinstance(method, asgiref.sync.AsyncToSync):
++            self.skipTest("This test covers async-only functionality")
++
++
+ class CustomHeaderMiddleware(RemoteUserMiddleware):
+     """
+     Middleware that overrides custom HTTP auth user header.
+@@ -488,6 +513,11 @@ class CustomHeaderRemoteUserTest(RemoteUserTest):
+     header = "HTTP_AUTHUSER"
+ 
+ 
++class CustomHeaderASGISyncPathRemoteUserTest(ASGISyncPathRemoteUserTest):
++    middleware = "auth_tests.test_remote_user.CustomHeaderMiddleware"
++    header = "HTTP_AUTHUSER"
++
++
+ class PersistentRemoteUserTest(RemoteUserTest):
+     """
+     PersistentRemoteUserMiddleware keeps the user logged in even if the

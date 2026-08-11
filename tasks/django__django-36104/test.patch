@@ -1,0 +1,24 @@
+commit a2f8a4a6f9ac094edde937e56a3ecbd112ee448c
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Wed Jun 10 16:24:10 2026 -0400
+
+    Fixed #36104 -- Returned NotImplemented in Media.__add__ for non-Media RHS.
+
+diff --git a/tests/forms_tests/tests/test_media.py b/tests/forms_tests/tests/test_media.py
+index b24ed948a9..854e52d95c 100644
+--- a/tests/forms_tests/tests/test_media.py
++++ b/tests/forms_tests/tests/test_media.py
+@@ -859,6 +859,13 @@ class FormsMediaTestCase(SimpleTestCase):
+         self.assertEqual(merged._css_lists, [{"screen": ["a.css"]}])
+         self.assertEqual(merged._js_lists, [["a"]])
+ 
++    def test_add_invalid_type(self):
++        class InvalidType:
++            pass
++
++        with self.assertRaises(TypeError):
++            Media() + InvalidType()
++
+     def test_render_js_with_attrs(self):
+         media = Media(js=[Script("/path/to/js", integrity="sha256-abc")])
+         self.assertHTMLEqual(

@@ -1,0 +1,79 @@
+# Harness constants. Identical for every model in every run.
+#
+# These are frozen by policy: they are part of the task definition, not tuning
+# knobs. Do not adjust them in response to observed results -- doing so makes
+# runs mutually incomparable and turns the eval into a harness comparison.
+# Every value here is copied into results/<run_id>/run.json.
+
+# Max agent-loop iterations before the harness stops the model and grades
+# whatever patch exists. Hitting this cap is a FAILURE TO SOLVE, scored as
+# such. Not to be raised if models cluster at the ceiling.
+max_steps: 50
+
+# The model may not execute the test suite. It gets no verification signal
+# inside the loop; it must reason from the code alone.
+allow_test_execution: false
+
+# The model does not see fail_to_pass / pass_to_pass test names, which would
+# otherwise point directly at the bug location.
+reveal_test_names: false
+
+# The model is not told the step budget -- not the number, and not that a
+# budget exists at all. The system prompt must not mention steps, limits, or
+# remaining work; tool results must not carry a step counter or countdown.
+# Revealing it would let a model ration its exploration or bail early with a
+# partial patch, which measures budget-following rather than bug-fixing, and
+# would reward that unevenly across models.
+reveal_step_budget: false
+
+# The model-facing prompt, frozen on the same terms as the constants above.
+# Held in a separate file because it is prose, but it is just as much a fairness
+# input as max_steps: a per-model prompt tweak turns this into a comparison of
+# prompts. Tells the model to treat the existing tests as correct, so a model
+# that would otherwise "fix" a test it disagrees with is redirected in-loop
+# rather than having the edit silently reverted at grade time.
+system_prompt: config/system_prompt.md
+
+# Attempts per task. One attempt: with a binary pass/fail measure compared on an
+# identical task set, sampling noise across tasks dominates per-task noise, so
+# task count buys more statistical power than repeat attempts do.
+attempts: 1
+
+# Prompt caching is on for every request. Each step re-sends the whole
+# transcript, so the repeated prefix is exactly what caching discounts.
+#
+# Two implementation requirements, both easy to get silently wrong:
+#   - Rolling breakpoints. A breakpoint searches back at most 20 content blocks
+#     for a prior cache entry. This loop adds ~2 blocks per step (assistant
+#     tool_use + user tool_result), so a 25-step task reaches ~50 blocks and a
+#     single trailing breakpoint stops hitting cache partway through every task,
+#     with no error. Place an intermediate breakpoint roughly every 15 blocks.
+#   - Verify, don't assume. Assert usage.cache_read_input_tokens > 0 after the
+#     first step; zero across identical prefixes means something invalidated it.
+prompt_caching: true
+
+# Server-side context management stays OFF. It is opt-in beta on the Anthropic
+# API and differs by provider in both mechanism (summarize vs. clear) and
+# trigger threshold, so enabling it would make each model's effective context a
+# provider artifact -- a harness difference wearing a model difference's
+# clothes. It is also unnecessary here: ~25 steps of bounded reads lands near
+# 45-50k tokens, far below the ~150k compaction trigger.
+context_compaction: false
+context_editing: false
+
+# Excluded because it injects a countdown marker the model can read, which is
+# budget awareness by another name -- the thing reveal_step_budget forbids.
+task_budget: none
+
+# Safety backstops only -- not fairness levers. Sized to catch hung containers
+# and pathological tool calls, not to constrain a genuine attempt.
+wall_clock_timeout_sec: 1800
+
+# Cumulative tokens across all requests in one task, input + output. Derived, not
+# guessed: because every step re-sends the transcript, a task running to the
+# 50-step cap accumulates roughly
+#     sum over k of (prompt + k * growth)  ~= 2.4M input + ~20k output
+# The previous value of 2,000,000 sat BELOW that, so it would have fired on
+# legitimate runs and recorded them as failures. 8M leaves ~3x headroom over the
+# worst legitimate case while still catching a runaway loop.
+max_total_tokens_per_task: 8000000

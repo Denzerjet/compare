@@ -1,0 +1,26 @@
+commit 65acb3cc2e76c238f5aee38d22626d92171a2f7c
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Thu Jun 18 14:22:30 2026 -0400
+
+    Fixed #37101 -- Used netstring delimiter between vary on headers for cached pages.
+    
+    This prevents collisions between header values that concatenate to the same thing.
+
+diff --git a/django/utils/cache.py b/django/utils/cache.py
+index e797e9ece5..22c72c74df 100644
+--- a/django/utils/cache.py
++++ b/django/utils/cache.py
+@@ -356,8 +356,11 @@ def _generate_cache_key(request, method, headerlist, key_prefix):
+     ctx = md5(usedforsecurity=False)
+     for header in headerlist:
+         value = request.META.get(header)
+-        if value is not None:
+-            ctx.update(value.encode())
++        if value is None:
++            value = ""
++        data = value.encode()
++        # Use the netstring delimiter (with trailing comma).
++        ctx.update(b"%d:%s," % (len(data), data))
+     url = md5(request.build_absolute_uri().encode("ascii"), usedforsecurity=False)
+     cache_key = "views.decorators.cache.cache_page.%s.%s.%s.%s" % (
+         key_prefix,

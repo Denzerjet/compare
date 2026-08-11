@@ -1,0 +1,125 @@
+# Task mining criteria.
+#
+# Governing principle, set deliberately: FLAG, DON'T REJECT. A task is excluded
+# only when it cannot be graded reliably (wrong environment, non-deterministic,
+# too slow). Everything else -- thin problem statements, feature tickets, old
+# commits, lopsided subsystem coverage -- is kept and tagged, so filtering
+# happens at analysis time against recorded metadata rather than being baked
+# irreversibly into the benchmark.
+#
+# The cost of that choice is real and lands on report/: if the breakdowns below
+# are not surfaced, unfair or contamination-exposed tasks flow silently into the
+# headline resolve rate. The report layer must show them by default.
+
+window:
+  # 24 months. ~491 structural candidates measured at 20.5/month, against a
+  # target of 100 tasks -- headroom now absorbs validation losses rather than
+  # buying selectivity.
+  since: "2024-08-01"
+  # No contamination cut-off is applied at mining time. It cannot be: the
+  # boundary depends on each model's training cutoff, and the model set is not
+  # chosen. commit_date is recorded on every task and report/ derives an
+  # in_training_window flag per model. See tags.commit_date.
+  contamination_filter: none
+
+candidate_filters:
+  # Django's convention for any ticket-closing commit. Does not distinguish bug
+  # from feature -- that comes from the Trac ticket type below.
+  subject_pattern: '^Fixed #\d+'
+  require_merge_commit: false
+  must_touch: ["django/", "tests/"]
+  max_source_files: 3
+  # Raised from [1, 80]. The old upper bound was arbitrary and was hiding the
+  # supply needed for the large-patch slice below: measured over the window,
+  # >=50 LOC has 88 candidates and >=80 has 56, all previously excluded.
+  source_loc_range: [1, 300]
+
+# HARD EXCLUSIONS -- the only rejections. Each one means "cannot be graded
+# trustworthily in this harness", never "looks like a weak task".
+exclude:
+  paths:
+    # No GDAL/GEOS in the image (src/harness/env/Dockerfile).
+    - "django/contrib/gis"
+    - "tests/gis_tests"
+    # Requires a live postgres; the image is sqlite-only.
+    - "django/contrib/postgres"
+  requires_services: [selenium, memcached, redis, postgres, mysql]
+  # Version-gated tests that go stale as deprecation timelines advance.
+  subject_contains: ["deprecat"]
+  # 100 tasks x 3 attempts x N models makes slow labels expensive.
+  max_test_runtime_sec: 120
+  # A ticket fixed across several commits yields one task, from the last commit,
+  # so partial fixes never become impossible tasks.
+  one_task_per_ticket: true
+
+problem_statement:
+  source: trac_ticket        # the reporter's original, pre-fix description
+  fallback: commit_subject   # only when no ticket description exists at all
+  # Deliberately NOT a rejection criterion. A terse ticket still describes a bug
+  # that was genuinely fixed, and dropping those would bias the set toward
+  # well-written reports. Thinness is recorded instead, so a model doing badly
+  # only on thin statements is visible as such.
+  reject_if_thin: false
+  # Tickets sometimes paste the patch or link a PR diff. Stripped, because it
+  # would hand over the answer outright.
+  strip_solution_leaks: true
+
+ticket_types:
+  # Features are kept, but tagged: a feature ticket's tests encode API decisions
+  # the statement may never state, so a model can be right and still fail. That
+  # is a different failure mode from misreading code and should be separable.
+  include: [bug, feature, cleanup]
+  flag_non_bug: true
+
+sampling:
+  target_tasks: 100
+
+  # Newest commits first. Contamination means the fix is already in a model's
+  # training data, so the OLDEST commits are the most exposed and the newest the
+  # cleanest -- an earlier plan to sort earliest-first had this backwards. 239 of
+  # 573 candidates are from 2025-10-01 onward.
+  order: commit_date_desc
+
+  # No targeted slice. It was originally 25 tasks at >=50 LOC to carry a
+  # multi-line-reasoning signal, then relaxed to >=30. Measurement then made it
+  # unnecessary: `hunks_changed` (distinct edit sites in the reference fix) is a
+  # closer proxy for "must locate and coordinate several changes", and the set
+  # already contains 27 tasks with >=3 hunks -- past the 25 that was wanted --
+  # without any targeting. Of the 12 tasks with >=30 LOC, 11 are also >=3 hunks,
+  # so LOC was capturing a subset of the same property, just fewer of them.
+  #
+  # count: 0 means the driver runs a single pass. loc_changed and hunks_changed are
+  # both still recorded; whether either predicts difficulty is an open empirical
+  # question the results will answer.
+  large_patch_slice:
+    count: 0
+    min_source_loc: 30
+  # Representative, not balanced. No quotas of any kind -- not by subsystem, not
+  # by difficulty, not by ticket type. The 100 tasks are drawn to reflect the
+  # real distribution of django bug fixes, so the resolve rate estimates "how
+  # well does this model fix real django bugs" rather than performance on an
+  # artificially evened-out set.
+  #
+  # What this yields, measured over the 24-month window (per-commit, primary
+  # file): ~28% django/db/models, ~12% django/contrib/admin, ~7% django/utils,
+  # ~7% django/db/backends, remainder spread across 33 further areas. The ORM
+  # dominating is a property of django, not a sampling artefact.
+  #
+  # No difficulty stratification either: the outcome measure is binary pass/fail.
+  stratify_by_difficulty: false
+  balance_by_area: false
+  # Every dimension that could have been a quota is a recorded tag instead, so
+  # any concentration effect is visible in the per-flag breakdowns rather than
+  # having been silently engineered away. See required_tags.
+
+# Written onto every task for analysis-time slicing. These carry the weight that
+# mining-time rejection would otherwise have carried.
+required_tags:
+  - commit_date        # -> per-model contamination flag, computed in report/
+  - ticket_type        # bug | feature | cleanup
+  - is_feature         # convenience flag for the above
+  - statement_chars    # crude thinness proxy
+  - has_reproduction   # whether the ticket shows failing input/output
+  - area               # top-level django subsystem
+  - loc_changed
+  - files_changed

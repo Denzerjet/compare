@@ -1,0 +1,47 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "a2348c85fc6c20087935c74cd99340dd4ef2dcdc",
+  "base_commit": "8c2d3dca633629effad17ccc98730234f740d03f",
+  "commit_date": "2026-06-05",
+  "subject": "Fixed #37139 -- Fixed inlines crash on parent models with db_default on primary key.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37139",
+  "source_files": [
+    "django/db/models/base.py"
+  ],
+  "test_files": [
+    "tests/basic/tests.py",
+    "tests/composite_pk/models/__init__.py",
+    "tests/composite_pk/models/tenant.py",
+    "tests/composite_pk/tests.py",
+    "tests/inline_formsets/models.py",
+    "tests/inline_formsets/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "basic.tests",
+    "composite_pk.tests",
+    "inline_formsets.tests"
+  ],
+  "narrowed_test_labels": [
+    "basic.tests",
+    "composite_pk.tests",
+    "inline_formsets.tests"
+  ],
+  "skipped_tests": [
+    "basic.tests.ConcurrentSaveTests.test_concurrent_delete_with_save",
+    "basic.tests.ModelRefreshTests.test_refresh_for_update",
+    "basic.tests.ModelTest.test_emptyqs_distinct"
+  ],
+  "graded_runtime_sec": 1.68,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

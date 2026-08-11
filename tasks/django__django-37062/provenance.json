@@ -1,0 +1,37 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "da6567da7ea0e844c9a880e02c7b34e1a184edf8",
+  "base_commit": "3dcbb80c3f916cddeaa1c0d33e07f06cc328f64a",
+  "commit_date": "2026-05-15",
+  "subject": "Fixed #37062 -- Added preserve_request support to RedirectView.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37062",
+  "source_files": [
+    "django/views/generic/base.py"
+  ],
+  "test_files": [
+    "tests/generic_views/test_base.py"
+  ],
+  "dropped_files": [
+    "docs/ref/class-based-views/base.txt",
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "generic_views.test_base"
+  ],
+  "narrowed_test_labels": [
+    "generic_views.test_base"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 4.52,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

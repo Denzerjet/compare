@@ -1,0 +1,36 @@
+commit 09434486302078c3649e034dfa74cf3f102db20b
+Author: diaxoaine <42137630+diaxoaine@users.noreply.github.com>
+Date:   Thu Jun 11 09:58:41 2026 +0700
+
+    Fixed #37152 -- Raised ValueError when Bcc is used in EmailMessage headers.
+    
+    Bcc addresses are sent via the SMTP envelope and must never appear in
+    the message itself. A "Bcc" key in `extra_headers` was not excluded like
+    From/To/Cc/Reply-To, so it leaked into the generated message as a
+    visible header.
+    
+    Thanks Mike Edmunds for reviews.
+
+diff --git a/tests/mail/tests.py b/tests/mail/tests.py
+index 7963b81892..01a37284c1 100644
+--- a/tests/mail/tests.py
++++ b/tests/mail/tests.py
+@@ -397,6 +397,18 @@ class EmailMessageTests(MailTestsMixin, SimpleTestCase):
+         self.assertNotIn("bcc@example.com", message.as_string())
+         self.assertEqual(email.recipients(), ["to@example.com", "bcc@example.com"])
+ 
++    def test_bcc_in_headers_raises_error(self):
++        email = EmailMessage(
++            to=["to@example.com"],
++            headers={"Bcc": "bcc@example.com"},
++        )
++        msg = (
++            'Bcc is not a valid email header. Use the "bcc" argument to '
++            "specify blind carbon copy recipients."
++        )
++        with self.assertRaisesMessage(ValueError, msg):
++            email.message()
++
+     def test_reply_to(self):
+         with self.subTest("Single Reply-To"):
+             email = EmailMessage(

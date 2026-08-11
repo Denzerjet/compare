@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "bc9bed573ce39c3b739a4a3b7848816d464b6bdc",
+  "base_commit": "e78a46a8fb291a11a31b6938b5089db1058f3925",
+  "commit_date": "2026-05-21",
+  "subject": "Fixed #37088 -- Included attributes in media object equality.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37088",
+  "source_files": [
+    "django/forms/widgets.py"
+  ],
+  "test_files": [
+    "tests/forms_tests/tests/test_media.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "forms_tests.tests.test_media"
+  ],
+  "narrowed_test_labels": [
+    "forms_tests.tests.test_media"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.43,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

@@ -1,0 +1,97 @@
+commit 2333d56696141303000986a16553205ece993c67
+Author: Praful Gulani <prafulgulani555@gmail.com>
+Date:   Thu Feb 12 20:03:25 2026 +0530
+
+    Fixed #36894 -- Added TypeError for conflicting arguments in mail APIs.
+    
+    A TypeError is now raised if fail_silently=True, auth_user, or auth_password
+    are provided along a connection.
+    
+    Updated AdminEmailHandler in django.utils.log to remove redundant
+    fail_silently=True.
+    
+    Thanks Mike Edmunds for the report and Jacob Tyler Walls for the review.
+
+diff --git a/django/core/mail/__init__.py b/django/core/mail/__init__.py
+index 4d7f8bf1d9..6a0baa48ed 100644
+--- a/django/core/mail/__init__.py
++++ b/django/core/mail/__init__.py
+@@ -94,6 +94,17 @@ def send_mail(
+     Note: The API for this method is frozen. New code wanting to extend the
+     functionality should use the EmailMessage class directly.
+     """
++    if connection is not None:
++        if fail_silently:
++            raise TypeError(
++                "fail_silently cannot be used with a connection. "
++                "Pass fail_silently to get_connection() instead."
++            )
++        if auth_user is not None or auth_password is not None:
++            raise TypeError(
++                "auth_user and auth_password cannot be used with a connection. "
++                "Pass auth_user and auth_password to get_connection() instead."
++            )
+     connection = connection or get_connection(
+         username=auth_user,
+         password=auth_password,
+@@ -137,6 +148,17 @@ def send_mass_mail(
+     Note: The API for this method is frozen. New code wanting to extend the
+     functionality should use the EmailMessage class directly.
+     """
++    if connection is not None:
++        if fail_silently:
++            raise TypeError(
++                "fail_silently cannot be used with a connection. "
++                "Pass fail_silently to get_connection() instead."
++            )
++        if auth_user is not None or auth_password is not None:
++            raise TypeError(
++                "auth_user and auth_password cannot be used with a connection. "
++                "Pass auth_user and auth_password to get_connection() instead."
++            )
+     connection = connection or get_connection(
+         username=auth_user,
+         password=auth_password,
+@@ -158,6 +180,11 @@ def _send_server_message(
+     fail_silently=False,
+     connection=None,
+ ):
++    if connection is not None and fail_silently:
++        raise TypeError(
++            "fail_silently cannot be used with a connection. "
++            "Pass fail_silently to get_connection() instead."
++        )
+     recipients = getattr(settings, setting_name)
+     if not recipients:
+         return
+diff --git a/django/core/mail/message.py b/django/core/mail/message.py
+index 66d5efeb63..6eb85c6a2a 100644
+--- a/django/core/mail/message.py
++++ b/django/core/mail/message.py
+@@ -355,6 +355,13 @@ class EmailMessage:
+             # Don't bother creating the network connection if there's nobody to
+             # send to.
+             return 0
++
++        if fail_silently and self.connection:
++            raise TypeError(
++                "fail_silently cannot be used with a connection. "
++                "Pass fail_silently to get_connection() instead."
++            )
++
+         return self.get_connection(fail_silently).send_messages([self])
+ 
+     def attach(self, filename=None, content=None, mimetype=None):
+diff --git a/django/utils/log.py b/django/utils/log.py
+index d4e96a9816..9a3a7d9f62 100644
+--- a/django/utils/log.py
++++ b/django/utils/log.py
+@@ -132,7 +132,7 @@ class AdminEmailHandler(logging.Handler):
+             reporter.get_traceback_text(),
+         )
+         html_message = reporter.get_traceback_html() if self.include_html else None
+-        self.send_mail(subject, message, fail_silently=True, html_message=html_message)
++        self.send_mail(subject, message, html_message=html_message)
+ 
+     def send_mail(self, subject, message, *args, **kwargs):
+         mail.mail_admins(

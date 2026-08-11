@@ -1,0 +1,25 @@
+commit 2c8c0ca0a0b73b167c29db506f810c318f915587
+Author: babbitt <oss@joebabbitt.com>
+Date:   Tue May 19 11:11:29 2026 -0700
+
+    Fixed #36225 -- Coped with lack of get_by_natural_key() in createsuperuser.
+
+diff --git a/django/contrib/auth/management/commands/createsuperuser.py b/django/contrib/auth/management/commands/createsuperuser.py
+index d5d5d193c8..5fecb4c0ed 100644
+--- a/django/contrib/auth/management/commands/createsuperuser.py
++++ b/django/contrib/auth/management/commands/createsuperuser.py
+@@ -298,9 +298,13 @@ class Command(BaseCommand):
+             for unique_constraint in self.UserModel._meta.total_unique_constraints
+         )
+ 
++    @cached_property
++    def natural_key_defined(self):
++        return hasattr(self.UserModel._default_manager, "get_by_natural_key")
++
+     def _validate_username(self, username, verbose_field_name, database):
+         """Validate username. If invalid, return a string error message."""
+-        if self.username_is_unique:
++        if self.username_is_unique and self.natural_key_defined:
+             try:
+                 self.UserModel._default_manager.db_manager(database).get_by_natural_key(
+                     username

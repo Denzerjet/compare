@@ -1,0 +1,18 @@
+commit 6c95af5c9d294a20d09f080d7c144e3b7362d65f
+Author: Marc Gibbons <1726961+marcgibbons@users.noreply.github.com>
+Date:   Fri Mar 13 13:46:49 2026 -0400
+
+    Fixed #36966 -- Fixed ValueError when `query_params` and `follow` are used on test client.
+
+diff --git a/django/test/client.py b/django/test/client.py
+index 301399c9ce..c7cdd24abf 100644
+--- a/django/test/client.py
++++ b/django/test/client.py
+@@ -998,6 +998,7 @@ class ClientMixin:
+             request_method = self.get
+             data = QueryDict(url.query)
+             content_type = None
++            query_params = None
+ 
+         return request_method(
+             path,

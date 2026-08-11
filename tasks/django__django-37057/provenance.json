@@ -1,0 +1,40 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "61a62be313e395ce1265132bfc99f51476fb3c95",
+  "base_commit": "63c56cda133a85a158502891c40465bc0331d3d9",
+  "commit_date": "2026-04-22",
+  "subject": "Fixed #37057 -- Adjusted UniqueConstraint handling of UNKNOWN condition.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37057",
+  "source_files": [
+    "django/db/models/constraints.py",
+    "django/db/models/query_utils.py"
+  ],
+  "test_files": [
+    "tests/constraints/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "constraints.tests"
+  ],
+  "narrowed_test_labels": [
+    "constraints.tests"
+  ],
+  "skipped_tests": [
+    "constraints.tests.CheckConstraintTests.test_validate_nullable_field_with_isnull",
+    "constraints.tests.UniqueConstraintTests.test_include_database_constraint",
+    "constraints.tests.UniqueConstraintTests.test_initially_deferred_database_constraint",
+    "constraints.tests.UniqueConstraintTests.test_initially_immediate_database_constraint"
+  ],
+  "graded_runtime_sec": 1.74,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

@@ -1,0 +1,102 @@
+commit 253f552c5809fa096116b601bd842ca4f3504860
+Author: David Smith <smithdc@gmail.com>
+Date:   Mon Mar 30 23:16:32 2026 +0100
+
+    Fixed #36949 -- Improved RelatedFieldWidgetWrapper <label>s.
+    
+    Regression in 4187da258fe212d494cb578a0bc2b52c4979ab95.
+
+diff --git a/tests/admin_views/tests.py b/tests/admin_views/tests.py
+index e01ab3b538..4359a31135 100644
+--- a/tests/admin_views/tests.py
++++ b/tests/admin_views/tests.py
+@@ -7296,17 +7296,28 @@ class SeleniumTests(AdminSeleniumTestCase):
+             "Difficulty:",
+             "Materials:",
+             "Start datetime:",
+-            "Categories:",
+         ]
+         url = reverse("admin:admin_views_course_change", args=(course.pk,))
+         self.selenium.get(self.live_server_url + url)
+         fieldsets = self.selenium.find_elements(
+             By.CSS_SELECTOR, "fieldset.aligned fieldset"
+         )
++        self.assertEqual(len(fieldsets), len(expected_legend_tags_text))
+         for index, fieldset in enumerate(fieldsets):
+             legend = fieldset.find_element(By.TAG_NAME, "legend")
+             self.assertEqual(legend.text, expected_legend_tags_text[index])
+ 
++        # FilteredSelectMultiple uses <fieldset>.
++        url = reverse("admin:admin_views_camelcaserelatedmodel_add")
++        self.selenium.get(self.live_server_url + url)
++        fieldsets = self.selenium.find_elements(
++            By.CSS_SELECTOR, "fieldset.aligned fieldset"
++        )
++        self.assertEqual(len(fieldsets), 1)
++        for index, fieldset in enumerate(fieldsets):
++            legend = fieldset.find_element(By.TAG_NAME, "legend")
++            self.assertEqual(legend.text, "M2m:")
++
+     @screenshot_cases(["desktop_size", "mobile_size", "rtl", "dark", "high_contrast"])
+     def test_use_fieldset_with_grouped_fields(self):
+         from selenium.webdriver.common.by import By
+diff --git a/tests/modeladmin/tests.py b/tests/modeladmin/tests.py
+index f50a557d02..2516ca3207 100644
+--- a/tests/modeladmin/tests.py
++++ b/tests/modeladmin/tests.py
+@@ -830,6 +830,55 @@ class ModelAdminTests(TestCase):
+             ["extra", "transport", "id", "DELETE", "main_band"],
+         )
+ 
++    def test_foreign_key_as_custom_widget(self):
++        class CustomSelectMultiple(forms.SelectMultiple):
++            def build_attrs(self, base_attrs, extra_attrs=None):
++                attrs = super().build_attrs(base_attrs, extra_attrs)
++                attrs["data-custom-widget"] = "true"
++                return attrs
++
++        class ConcertAdmin(ModelAdmin):
++            formfield_overrides = {
++                models.ForeignKey: {"widget": CustomSelectMultiple},
++            }
++
++        cma = ConcertAdmin(Concert, self.site)
++        cmafa = cma.get_form(request)
++        expected = (
++            '<div><label for="id_main_band">Main band:</label><div '
++            'class="related-widget-wrapper" data-model-ref="band"><select '
++            'name="main_band" data-context="available-source" required '
++            'id="id_main_band" data-custom-widget="true" multiple>'
++            '<option value="">---------</option><option value="1">The Doors</option>'
++            "</select></div></div>"
++        )
++        self.assertInHTML(expected, cmafa().render())
++
++    def test_foreign_key_as_custom_widget_with_fieldset(self):
++        class CustomSelectMultipleFieldset(forms.RadioSelect):
++            use_fieldset = True
++
++            def build_attrs(self, base_attrs, extra_attrs=None):
++                attrs = super().build_attrs(base_attrs, extra_attrs)
++                attrs["use_fieldset"] = "true"
++                return attrs
++
++        class ConcertAdmin(ModelAdmin):
++            formfield_overrides = {
++                models.ForeignKey: {"widget": CustomSelectMultipleFieldset},
++            }
++
++        cma = ConcertAdmin(Concert, self.site)
++        cmafa = cma.get_form(request)
++        expected = (
++            '<fieldset><legend>Main band:</legend><div class="related-widget-wrapper" '
++            'data-model-ref="band"><div id="id_main_band"><div><label '
++            'for="id_main_band_0"><input type="radio" name="main_band" value="1" '
++            'data-context="available-source" required id="id_main_band_0" '
++            'use_fieldset="true">The Doors</label></div></div></div></fieldset>'
++        )
++        self.assertInHTML(expected, cmafa().render())
++
+     def test_log_actions(self):
+         ma = ModelAdmin(Band, self.site)
+         mock_request = MockRequest()

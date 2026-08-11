@@ -1,0 +1,64 @@
+commit fcf916884d25ed430bd7cedaea2b10035c2aa3b6
+Author: Clifford Gama <cliffygamy@gmail.com>
+Date:   Tue Mar 10 17:47:18 2026 +0200
+
+    Fixed #36973 -- Made fields.E348 check detect further clashes between managers and related_names.
+    
+    Clashes were only detected for self-referential relationships, i.e. ForeignKey("self").
+    
+    Refs #22977. Bug in 6888375c53476011754f778deabc6cdbfa327011.
+    
+    Thanks JaeHyuckSa for the thorough review!
+
+diff --git a/tests/invalid_models_tests/test_relative_fields.py b/tests/invalid_models_tests/test_relative_fields.py
+index 51b1de1494..a6edcc4e04 100644
+--- a/tests/invalid_models_tests/test_relative_fields.py
++++ b/tests/invalid_models_tests/test_relative_fields.py
+@@ -1579,11 +1579,12 @@ class RelatedQueryNameClashWithManagerTests(SimpleTestCase):
+             Author.check(),
+             [
+                 Error(
+-                    "Related name 'authors' for 'Author.mentor' clashes with the name "
+-                    "of a model manager.",
++                    "Related name 'authors' for 'invalid_models_tests.Author.mentor' "
++                    "clashes with the name of a model manager.",
+                     hint=(
+                         "Rename the model manager or change the related_name argument "
+-                        "in the definition for field 'Author.mentor'."
++                        "in the definition for field "
++                        "'invalid_models_tests.Author.mentor'."
+                     ),
+                     obj=Author._meta.get_field("mentor"),
+                     id="fields.E348",
+@@ -1591,6 +1592,31 @@ class RelatedQueryNameClashWithManagerTests(SimpleTestCase):
+             ],
+         )
+ 
++    def test_clash_between_rel_name_and_manager_non_self_referential(self):
++        class Thing(models.Model):
++            items = models.Manager()
++
++        class Item(models.Model):
++            thing = models.ForeignKey(Thing, models.CASCADE, related_name="items")
++            something = models.ForeignKey(Thing, models.CASCADE, related_name="+")
++
++        self.assertEqual(
++            Item.check(),
++            [
++                Error(
++                    "Related name 'items' for 'invalid_models_tests.Item.thing' "
++                    "clashes with the name of a model manager.",
++                    hint=(
++                        "Rename the model manager or change the related_name argument "
++                        "in the definition for field 'invalid_models_tests.Item.thing'."
++                    ),
++                    obj=Item._meta.get_field("thing"),
++                    id="fields.E348",
++                )
++            ],
++        )
++        self.assertEqual(Thing.check(), [])
++
+ 
+ @isolate_apps("invalid_models_tests")
+ class SelfReferentialM2MClashTests(SimpleTestCase):

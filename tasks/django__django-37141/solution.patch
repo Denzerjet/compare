@@ -1,0 +1,44 @@
+commit 14c66825e0088b7e08fe5d108fa293bd31722c39
+Author: NagaKartheekReddy <kartheek.5081@gmail.com>
+Date:   Thu Jun 4 22:41:53 2026 +0200
+
+    Fixed #37141 -- Added --using option to sendtestemail command.
+
+diff --git a/django/core/management/commands/sendtestemail.py b/django/core/management/commands/sendtestemail.py
+index fbb2a7856e..cfad05f5b8 100644
+--- a/django/core/management/commands/sendtestemail.py
++++ b/django/core/management/commands/sendtestemail.py
+@@ -28,8 +28,16 @@ class Command(BaseCommand):
+             action="store_true",
+             help="Send a test email to the addresses specified in settings.ADMINS.",
+         )
++        parser.add_argument(
++            "--using",
++            default=None,
++            help=(
++                "Specify the MAILERS alias to use for sending the test email. "
++                "Defaults to 'default'."
++            ),
++        )
+ 
+-    def handle(self, *args, **kwargs):
++    def handle(self, *args, using=None, **kwargs):
+         subject = "Test email from %s on %s" % (socket.gethostname(), timezone.now())
+ 
+         send_mail(
+@@ -37,10 +45,13 @@ class Command(BaseCommand):
+             message="If you're reading this, it was successful.",
+             from_email=None,
+             recipient_list=kwargs["email"],
++            using=using,
+         )
+ 
+         if kwargs["managers"]:
+-            mail_managers(subject, "This email was sent to the site managers.")
++            mail_managers(
++                subject, "This email was sent to the site managers.", using=using
++            )
+ 
+         if kwargs["admins"]:
+-            mail_admins(subject, "This email was sent to the site admins.")
++            mail_admins(subject, "This email was sent to the site admins.", using=using)

@@ -1,0 +1,25 @@
+commit 335c6d0129400eda792f3bec5c71bb28af5e5d37
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Tue May 12 15:27:59 2026 -0400
+
+    Fixed #37095 -- Checked maximum redirect lengths against percent-encoded URLs.
+
+diff --git a/django/http/response.py b/django/http/response.py
+index 45fb0177d1..17b8da4da1 100644
+--- a/django/http/response.py
++++ b/django/http/response.py
+@@ -642,12 +642,11 @@ class HttpResponseRedirectBase(HttpResponse):
+     ):
+         super().__init__(*args, **kwargs)
+         self["Location"] = iri_to_uri(redirect_to)
+-        redirect_to_str = str(redirect_to)
+-        if max_length is not None and len(redirect_to_str) > max_length:
++        if max_length is not None and len(self["Location"]) > max_length:
+             raise DisallowedRedirect(
+                 f"Unsafe redirect exceeding {max_length} characters"
+             )
+-        parsed = urlsplit(redirect_to_str)
++        parsed = urlsplit(str(redirect_to))
+         if preserve_request:
+             self.status_code = self.status_code_preserve_request
+         if parsed.scheme and parsed.scheme not in self.allowed_schemes:

@@ -1,0 +1,75 @@
+commit 2936a0a99719e3c3777039a0d6968deecb55c752
+Author: VIZZARD-X <vigneshanandmay13@gmail.com>
+Date:   Sat Jan 3 18:11:03 2026 +0530
+
+    Fixed #27752 -- Fixed ordering by Model.__str__ in the admin.
+    
+    Co-authored-by: blighj <blighj@users.noreply.github.com>
+
+diff --git a/tests/admin_utils/models.py b/tests/admin_utils/models.py
+index 59b4eab5c6..055ef07b75 100644
+--- a/tests/admin_utils/models.py
++++ b/tests/admin_utils/models.py
+@@ -47,6 +47,7 @@ class Cascade(models.Model):
+     num = models.PositiveSmallIntegerField()
+     parent = models.ForeignKey("self", models.CASCADE, null=True)
+ 
++    @admin.display(ordering="num")
+     def __str__(self):
+         return str(self.num)
+ 
+diff --git a/tests/admin_utils/tests.py b/tests/admin_utils/tests.py
+index a043939336..a2426d9f04 100644
+--- a/tests/admin_utils/tests.py
++++ b/tests/admin_utils/tests.py
+@@ -445,6 +445,12 @@ class UtilsTests(SimpleTestCase):
+             "property short description",
+         )
+ 
++    def test_label_for_field_str_admin_order_field(self):
++        _, attr = label_for_field("__str__", Cascade, return_attr=True)
++        self.assertIs(attr, Cascade.__str__)
++        self.assertTrue(hasattr(attr, "admin_order_field"))
++        self.assertEqual(attr.admin_order_field, "num")
++
+     def test_help_text_for_field(self):
+         tests = [
+             ("article", ""),
+diff --git a/tests/admin_views/models.py b/tests/admin_views/models.py
+index 13f092d0b4..4273175077 100644
+--- a/tests/admin_views/models.py
++++ b/tests/admin_views/models.py
+@@ -47,6 +47,7 @@ class Article(models.Model):
+         Section, models.SET_NULL, null=True, blank=True, related_name="+"
+     )
+ 
++    @admin.display(ordering="title")
+     def __str__(self):
+         return self.title
+ 
+diff --git a/tests/admin_views/tests.py b/tests/admin_views/tests.py
+index 4ba2fa2255..b3be31380f 100644
+--- a/tests/admin_views/tests.py
++++ b/tests/admin_views/tests.py
+@@ -799,6 +799,21 @@ class AdminViewBasicTest(AdminViewBasicTestCase):
+             "Results of sorting on Model method are out of order.",
+         )
+ 
++    def test_change_list_sorting_model_str(self):
++        """Ensure we can sort on a Model.__str__ list_display field."""
++
++        class ArticleStrAdmin(admin.ModelAdmin):
++            list_display = ["__str__"]
++
++        model_admin = ArticleStrAdmin(Article, site)
++        request = RequestFactory().get("/?o=1")
++        request.user = self.superuser
++        cl = model_admin.get_changelist_instance(request)
++        self.assertEqual(cl.get_ordering_field("__str__"), "title")
++        self.assertQuerySetEqual(
++            cl.get_queryset(request), Article.objects.order_by("title", "-pk")
++        )
++
+     def test_change_list_sorting_model_admin(self):
+         """
+         Ensure we can sort on a list_display field that is a ModelAdmin method

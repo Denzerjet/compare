@@ -1,0 +1,19 @@
+commit a2f8a4a6f9ac094edde937e56a3ecbd112ee448c
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Wed Jun 10 16:24:10 2026 -0400
+
+    Fixed #36104 -- Returned NotImplemented in Media.__add__ for non-Media RHS.
+
+diff --git a/django/forms/widgets.py b/django/forms/widgets.py
+index 56ff7bb5ad..82498aa662 100644
+--- a/django/forms/widgets.py
++++ b/django/forms/widgets.py
+@@ -262,6 +262,8 @@ class Media:
+             return list(dict.fromkeys(chain.from_iterable(filter(None, lists))))
+ 
+     def __add__(self, other):
++        if not isinstance(other, Media):
++            return NotImplemented
+         combined = Media()
+         combined._css_lists = self._css_lists[:]
+         combined._js_lists = self._js_lists[:]

@@ -1,0 +1,57 @@
+commit a32c7075cf634aee1f4f3deecd27f194097ec0c2
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Wed Apr 1 09:36:16 2026 -0400
+
+    Fixed #37017 -- Fixed setting or clearing of request.user after alogin/alogout().
+    
+    Regression in 31a43c571f4d036827d4fd7a5f615591637dc1be.
+
+diff --git a/tests/auth_tests/test_middleware.py b/tests/auth_tests/test_middleware.py
+index 5e106d40f7..894b49548b 100644
+--- a/tests/auth_tests/test_middleware.py
++++ b/tests/auth_tests/test_middleware.py
+@@ -4,7 +4,7 @@ from django.contrib.auth.middleware import (
+     AuthenticationMiddleware,
+     LoginRequiredMiddleware,
+ )
+-from django.contrib.auth.models import User
++from django.contrib.auth.models import AnonymousUser, User
+ from django.core.exceptions import ImproperlyConfigured
+ from django.http import HttpRequest, HttpResponse
+ from django.test import TestCase, modify_settings, override_settings
+@@ -77,6 +77,35 @@ class TestAuthenticationMiddleware(TestCase):
+         self.assertTrue(auser_second.is_anonymous)
+ 
+ 
++class TestAsyncLoginLogoutAfterSyncMiddleware(TestCase):
++    @classmethod
++    def setUpTestData(cls):
++        cls.user = User.objects.create_user(
++            "test_user", "test@example.com", "test_password"
++        )
++        cls.user2 = User.objects.create_user(
++            "test_user2", "test2@example.com", "test_password2"
++        )
++
++    def setUp(self):
++        self.middleware = AuthenticationMiddleware(lambda req: HttpResponse())
++        self.client.force_login(self.user)
++        self.request = HttpRequest()
++        self.request.session = self.client.session
++        # Populate self.request.user.
++        self.middleware(self.request)
++        # .user is lazy, so materialize it by accessing an attribute.
++        self.request.user.is_authenticated
++
++    async def test_user_after_alogin(self):
++        await alogin(self.request, self.user2)
++        self.assertEqual(self.request.user, self.user2)
++
++    async def test_user_after_alogout(self):
++        await alogout(self.request)
++        self.assertEqual(self.request.user, AnonymousUser())
++
++
+ @override_settings(ROOT_URLCONF="auth_tests.urls")
+ @modify_settings(
+     MIDDLEWARE={"append": "django.contrib.auth.middleware.LoginRequiredMiddleware"}

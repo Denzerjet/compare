@@ -1,0 +1,34 @@
+commit 2936a0a99719e3c3777039a0d6968deecb55c752
+Author: VIZZARD-X <vigneshanandmay13@gmail.com>
+Date:   Sat Jan 3 18:11:03 2026 +0530
+
+    Fixed #27752 -- Fixed ordering by Model.__str__ in the admin.
+    
+    Co-authored-by: blighj <blighj@users.noreply.github.com>
+
+diff --git a/django/contrib/admin/utils.py b/django/contrib/admin/utils.py
+index 34f53a4df2..38aa98b6bd 100644
+--- a/django/contrib/admin/utils.py
++++ b/django/contrib/admin/utils.py
+@@ -372,7 +372,7 @@ def label_for_field(name, model, model_admin=None, return_attr=False, form=None)
+     except FieldDoesNotExist:
+         if name == "__str__":
+             label = str(model._meta.verbose_name)
+-            attr = str
++            attr = model.__str__
+         else:
+             if callable(name):
+                 attr = name
+diff --git a/django/contrib/admin/views/main.py b/django/contrib/admin/views/main.py
+index 0ceaf5f7a5..1bfe480829 100644
+--- a/django/contrib/admin/views/main.py
++++ b/django/contrib/admin/views/main.py
+@@ -359,7 +359,7 @@ class ChangeList:
+             # that allows sorting.
+             if callable(field_name):
+                 attr = field_name
+-            elif hasattr(self.model_admin, field_name):
++            elif hasattr(self.model_admin, field_name) and field_name != "__str__":
+                 attr = getattr(self.model_admin, field_name)
+             else:
+                 try:

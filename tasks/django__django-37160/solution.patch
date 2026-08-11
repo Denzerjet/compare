@@ -1,0 +1,92 @@
+commit 4ea38d54c10e0f44e189605c217a55cdfe9fdde8
+Author: Natalia <124304+nessita@users.noreply.github.com>
+Date:   Wed Jun 10 18:26:39 2026 -0300
+
+    Fixed #37160 -- Made admin views raise PermissionDenied consistently.
+    
+    The admin view_on_site and history views now return an HTTP 403 response
+    when a staff user lacks view or change permission for the target model,
+    consistent with the changeform and autocomplete views.
+    
+    Thanks Bence Nagy for the report.
+
+diff --git a/django/contrib/admin/options.py b/django/contrib/admin/options.py
+index fd4c644b04..8ce7ffa942 100644
+--- a/django/contrib/admin/options.py
++++ b/django/contrib/admin/options.py
+@@ -2563,14 +2563,14 @@ class ModelAdmin(BaseModelAdmin):
+         # First check if the user can see this history.
+         model = self.model
+         obj = self.get_object(request, unquote(object_id))
++        if not self.has_view_or_change_permission(request, obj):
++            raise PermissionDenied
++
+         if obj is None:
+             return self._get_obj_does_not_exist_redirect(
+                 request, model._meta, object_id
+             )
+ 
+-        if not self.has_view_or_change_permission(request, obj):
+-            raise PermissionDenied
+-
+         # Then get the history for this object.
+         app_label = self.opts.app_label
+         action_list = (
+diff --git a/django/contrib/admin/sites.py b/django/contrib/admin/sites.py
+index d160ec06d5..9a46c8e39b 100644
+--- a/django/contrib/admin/sites.py
++++ b/django/contrib/admin/sites.py
+@@ -9,7 +9,7 @@ from django.contrib.admin.options import EMPTY_VALUE_STRING
+ from django.contrib.admin.views.autocomplete import AutocompleteJsonView
+ from django.contrib.auth import REDIRECT_FIELD_NAME
+ from django.contrib.auth.decorators import login_not_required
+-from django.core.exceptions import ImproperlyConfigured
++from django.core.exceptions import ImproperlyConfigured, PermissionDenied
+ from django.db.models.base import ModelBase
+ from django.http import Http404, HttpResponsePermanentRedirect, HttpResponseRedirect
+ from django.template.response import TemplateResponse
+@@ -256,10 +256,6 @@ class AdminSite:
+         return update_wrapper(inner, view)
+ 
+     def get_urls(self):
+-        # Since this module gets imported in the application's root package,
+-        # it cannot import models from other applications at the module level,
+-        # and django.contrib.contenttypes.views imports ContentType.
+-        from django.contrib.contenttypes import views as contenttype_views
+         from django.urls import include, path, re_path
+ 
+         def wrap(view, cacheable=False):
+@@ -290,7 +286,7 @@ class AdminSite:
+             path("jsi18n/", wrap(self.i18n_javascript, cacheable=True), name="jsi18n"),
+             path(
+                 "r/<path:content_type_id>/<path:object_id>/",
+-                wrap(contenttype_views.shortcut),
++                wrap(self.shortcut_view),
+                 name="view_on_site",
+             ),
+         ]
+@@ -451,6 +447,24 @@ class AdminSite:
+     def autocomplete_view(self, request):
+         return AutocompleteJsonView.as_view(admin_site=self)(request)
+ 
++    def shortcut_view(self, request, content_type_id, object_id):
++        from django.contrib.contenttypes import views as contenttype_views
++        from django.contrib.contenttypes.models import ContentType
++
++        try:
++            content_type = ContentType.objects.get_for_id(int(content_type_id))
++        except (ContentType.DoesNotExist, ValueError):
++            pass
++        else:
++            model_class = content_type.model_class()
++            if (
++                model_class is not None
++                and self.is_registered(model_class)
++                and not self.get_model_admin(model_class).has_view_permission(request)
++            ):
++                raise PermissionDenied
++        return contenttype_views.shortcut(request, content_type_id, object_id)
++
+     @no_append_slash
+     def catch_all_view(self, request, url):
+         if settings.APPEND_SLASH and not url.endswith("/"):

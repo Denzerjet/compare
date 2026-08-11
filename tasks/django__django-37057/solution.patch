@@ -1,0 +1,71 @@
+commit 61a62be313e395ce1265132bfc99f51476fb3c95
+Author: Simon Charette <charette.s@gmail.com>
+Date:   Wed Apr 22 11:46:49 2026 -0400
+
+    Fixed #37057 -- Adjusted UniqueConstraint handling of UNKNOWN condition.
+    
+    When we adjusted UNKNOWN handling for CheckConstraint in refs #33996 we assumed
+    that all usage of Q.check would benefit from this approach.
+    
+    However while CHECK constraints enforcement do ignore conditions involving NULL
+    that resolve to UNKNOWN it's not the case for other type of constraints such as
+    UNIQUE ones.
+    
+    Given how UNKNOWN should be treated depends on the callers context it appears
+    that a better strategy for COALESCE wrapping is to force them to apply it if
+    necessary.
+    
+    Thanks Drew Shapiro for the report.
+
+diff --git a/django/db/models/constraints.py b/django/db/models/constraints.py
+index 7dfeb3b649..a4e8ab8ab1 100644
+--- a/django/db/models/constraints.py
++++ b/django/db/models/constraints.py
+@@ -6,6 +6,8 @@ from django.core.exceptions import FieldDoesNotExist, ValidationError
+ from django.db import connections
+ from django.db.models.constants import LOOKUP_SEP
+ from django.db.models.expressions import Exists, ExpressionList, F, RawSQL
++from django.db.models.fields import BooleanField
++from django.db.models.functions import Coalesce
+ from django.db.models.indexes import IndexExpression
+ from django.db.models.lookups import Exact, IsNull
+ from django.db.models.query_utils import Q
+@@ -212,7 +214,11 @@ class CheckConstraint(BaseConstraint):
+         # Ignore constraints with excluded fields in condition.
+         if exclude and self._expression_refs_exclude(model, self.condition, exclude):
+             return
+-        if not Q(self.condition).check(against, using=using):
++        condition = self.condition
++        if connections[using].features.supports_comparing_boolean_expr:
++            # Checks constraints do not fail when they evaluate to UNKNOWN.
++            condition = Coalesce(condition, True, output_field=BooleanField())
++        if not Q(condition).check(against, using=using):
+             raise ValidationError(
+                 self.get_violation_error_message(), code=self.violation_error_code
+             )
+diff --git a/django/db/models/query_utils.py b/django/db/models/query_utils.py
+index c282c4f744..c37e6b7a49 100644
+--- a/django/db/models/query_utils.py
++++ b/django/db/models/query_utils.py
+@@ -165,8 +165,7 @@ class Q(tree.Node):
+         matches against the expressions.
+         """
+         # Avoid circular imports.
+-        from django.db.models import BooleanField, Value
+-        from django.db.models.functions import Coalesce
++        from django.db.models import Value
+         from django.db.models.sql import Query
+         from django.db.models.sql.constants import SINGLE
+ 
+@@ -178,10 +177,7 @@ class Q(tree.Node):
+         query.add_annotation(Value(1), "_check")
+         connection = connections[using]
+         # This will raise a FieldError if a field is missing in "against".
+-        if connection.features.supports_comparing_boolean_expr:
+-            query.add_q(Q(Coalesce(self, True, output_field=BooleanField())))
+-        else:
+-            query.add_q(self)
++        query.add_q(self)
+         compiler = query.get_compiler(using=using)
+         context_manager = (
+             transaction.atomic(using=using)

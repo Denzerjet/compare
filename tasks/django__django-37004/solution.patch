@@ -1,0 +1,22 @@
+commit 856c915326768962806705ca7733e4abbb8f794f
+Author: Rodrigo Vieira <rodrigo.vieira@gmail.com>
+Date:   Tue Mar 31 20:34:56 2026 -0300
+
+    Fixed #37004 -- Used QuerySet.totally_ordered in BaseModelFormSet.get_queryset() for stable ordering.
+
+diff --git a/django/forms/models.py b/django/forms/models.py
+index 104369c0b0..a53f119995 100644
+--- a/django/forms/models.py
++++ b/django/forms/models.py
+@@ -776,8 +776,9 @@ class BaseModelFormSet(BaseFormSet, AltersData):
+             # If the queryset isn't already ordered we need to add an
+             # artificial ordering here to make sure that all formsets
+             # constructed from this queryset have the same form order.
+-            if not qs.ordered:
+-                qs = qs.order_by(self.model._meta.pk.name)
++            if not qs.totally_ordered:
++                current_ordering = qs.query.order_by or qs.model._meta.ordering or []
++                qs = qs.order_by(*current_ordering, "pk")
+ 
+             # Removed queryset limiting here. As per discussion re: #13023
+             # on django-dev, max_num should not prevent existing

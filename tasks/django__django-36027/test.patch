@@ -1,0 +1,173 @@
+commit 6fc8150005256db2052b01812d65dff737563a1b
+Author: Carlton Gibson <carlton.gibson@noumenal.es>
+Date:   Sat Jul 18 14:28:25 2026 +0200
+
+    Fixed #36027 -- Made error response rendering thread-sensitive.
+    
+    Error response handling frequently makes use of the database, and so
+    must use the request specific connection sensitive worker thread.
+    
+    Previously response_for_exception was dispatched on the event loop's
+    default executor. This potentially leads to pool exhaustion, and
+    deadlock, when using database pooling option, or a large number of
+    permanently held open database connections when not using pooling.
+    
+    Connections held open were not subject to cleanup. If closed server
+    side, the reported "connection is closed" would be seen until
+    application restart.
+    
+    Moving error response rendering to the request specific connection
+    sensitive worker thread resolves both of these issues.
+    
+    The `thread_sensitive=False` was set in
+    e17ee4468875077b90b70bb6a589ebad7493f757 to maintain the prior
+    behaviour when asgiref switched the thread_sensitive default to
+    `True`. There was no specific reason for the non-tread-sensitive
+    behaviour beyond that. (With hindsight it was always incorrect for
+    the reasons here.)
+
+diff --git a/tests/asgi/tests.py b/tests/asgi/tests.py
+index 727ce2fa6c..a303c8146c 100644
+--- a/tests/asgi/tests.py
++++ b/tests/asgi/tests.py
+@@ -30,7 +30,7 @@ from django.urls import path
+ from django.utils.http import http_date
+ from django.views.decorators.csrf import csrf_exempt
+ 
+-from .urls import sync_waiter, test_filename
++from .urls import permission_denied_threads, sync_waiter, test_filename
+ 
+ TEST_STATIC_ROOT = Path(__file__).parent / "project" / "static"
+ TOO_MUCH_DATA_MSG = "Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE."
+@@ -497,6 +497,30 @@ class ASGITest(SimpleTestCase):
+             request_started_call["thread"], request_finished_call["thread"]
+         )
+ 
++    async def test_error_handler_dispatched_with_thread_sensitive(self):
++        """
++        Error responses must be rendered on the request's thread-sensitive
++        thread, where the request's database connections are usable and remain
++        subject to close_old_connections().
++        """
++        permission_denied_threads.clear()
++        application = get_asgi_application()
++        scope = self.async_request_factory._base_scope(path="/permission_denied/")
++        communicator = ApplicationCommunicator(application, scope)
++        await communicator.send_input({"type": "http.request"})
++        response_start = await communicator.receive_output()
++        self.assertEqual(response_start["type"], "http.response.start")
++        self.assertEqual(response_start["status"], 403)
++        response_body = await communicator.receive_output()
++        self.assertEqual(response_body["body"], b"Error handler content")
++        # Give response.close() time to finish.
++        await communicator.wait()
++
++        self.assertEqual(
++            permission_denied_threads["error_handler"],
++            permission_denied_threads["view"],
++        )
++
+     async def test_concurrent_async_uses_multiple_thread_pools(self):
+         sync_waiter.active_threads.clear()
+ 
+diff --git a/tests/asgi/urls.py b/tests/asgi/urls.py
+index 0311cf3f76..a22d97b431 100644
+--- a/tests/asgi/urls.py
++++ b/tests/asgi/urls.py
+@@ -2,6 +2,7 @@ import asyncio
+ import threading
+ import time
+ 
++from django.core.exceptions import PermissionDenied
+ from django.http import FileResponse, HttpResponse, StreamingHttpResponse
+ from django.urls import path
+ from django.views.decorators.csrf import csrf_exempt
+@@ -51,6 +52,20 @@ sync_waiter.lock = threading.Lock()
+ sync_waiter.barrier = threading.Barrier(2)
+ 
+ 
++def permission_denied_view(request):
++    permission_denied_threads["view"] = threading.current_thread()
++    raise PermissionDenied
++
++
++def permission_denied_error_handler(request, exception=None):
++    permission_denied_threads["error_handler"] = threading.current_thread()
++    return HttpResponse("Error handler content", status=403)
++
++
++permission_denied_threads = {}
++handler403 = permission_denied_error_handler
++
++
+ async def streaming_inner(sleep_time):
+     yield b"first\n"
+     await asyncio.sleep(sleep_time)
+@@ -73,5 +88,6 @@ urlpatterns = [
+     path("post/", post_echo),
+     path("wait/", sync_waiter),
+     path("delayed_hello/", hello_with_delay),
++    path("permission_denied/", permission_denied_view),
+     path("streaming/", streaming_view),
+ ]
+diff --git a/tests/staticfiles_tests/test_handlers.py b/tests/staticfiles_tests/test_handlers.py
+index 5145d187e1..51509bfa70 100644
+--- a/tests/staticfiles_tests/test_handlers.py
++++ b/tests/staticfiles_tests/test_handlers.py
+@@ -1,6 +1,11 @@
++import threading
++
++from asgiref.sync import sync_to_async
++
+ from django.contrib.staticfiles.handlers import ASGIStaticFilesHandler
+ from django.core.handlers.asgi import ASGIHandler
+-from django.test import AsyncRequestFactory
++from django.http import HttpResponse
++from django.test import AsyncRequestFactory, override_settings
+ 
+ from .cases import StaticFilesTestCase
+ 
+@@ -12,6 +17,21 @@ class MockApplication:
+         return "Application called"
+ 
+ 
++error_handler_threads = {}
++
++
++def log_thread(key):
++    error_handler_threads[key] = threading.current_thread()
++
++
++urlpatterns = []
++
++
++def handler404(request, exception=None):
++    log_thread("error_handler")
++    return HttpResponse("Error handler content", status=404)
++
++
+ class TestASGIStaticFilesHandler(StaticFilesTestCase):
+     async_request_factory = AsyncRequestFactory()
+ 
+@@ -23,11 +43,20 @@ class TestASGIStaticFilesHandler(StaticFilesTestCase):
+         self.assertEqual(response.status_code, 200)
+ 
+     async def test_get_async_response_not_found(self):
++        error_handler_threads.clear()
++        await sync_to_async(log_thread)("worker")
++
+         request = self.async_request_factory.get("/static/test/not-found.txt")
+         handler = ASGIStaticFilesHandler(ASGIHandler())
+-        response = await handler.get_response_async(request)
++        with override_settings(ROOT_URLCONF="staticfiles_tests.test_handlers"):
++            response = await handler.get_response_async(request)
+         self.assertEqual(response.status_code, 404)
+ 
++        self.assertEqual(
++            error_handler_threads["error_handler"],
++            error_handler_threads["worker"],
++        )
++
+     async def test_non_http_requests_passed_to_the_wrapped_application(self):
+         tests = [
+             "/static/path.txt",

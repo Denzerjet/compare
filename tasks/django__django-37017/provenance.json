@@ -1,0 +1,38 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "a32c7075cf634aee1f4f3deecd27f194097ec0c2",
+  "base_commit": "856c915326768962806705ca7733e4abbb8f794f",
+  "commit_date": "2026-04-02",
+  "subject": "Fixed #37017 -- Fixed setting or clearing of request.user after alogin/alogout().",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37017",
+  "source_files": [
+    "django/contrib/auth/__init__.py"
+  ],
+  "test_files": [
+    "tests/auth_tests/test_middleware.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.0.4.txt"
+  ],
+  "full_test_labels": [
+    "auth_tests.test_middleware"
+  ],
+  "narrowed_test_labels": [
+    "auth_tests.test_middleware"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.64,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

@@ -1,0 +1,53 @@
+commit ca5746b8680a5e7e14014d365c0610f825df1dae
+Author: zhengkangyang <1872483761@qq.com>
+Date:   Sun Jun 7 01:01:43 2026 +0800
+
+    Fixed #37143 -- Added missing chunk_size=None check to QuerySet.aiterator().
+    
+    Co-authored-by: Jacob Walls <jacobtylerwalls@gmail.com>
+
+diff --git a/tests/async/test_async_queryset.py b/tests/async/test_async_queryset.py
+index 374b4576f9..f041274701 100644
+--- a/tests/async/test_async_queryset.py
++++ b/tests/async/test_async_queryset.py
+@@ -7,6 +7,7 @@ from asgiref.sync import async_to_sync, sync_to_async
+ from django.db import NotSupportedError, connection
+ from django.db.models import Prefetch, Sum
+ from django.test import TestCase, skipIfDBFeature, skipUnlessDBFeature
++from django.utils.deprecation import RemovedInDjango71Warning
+ 
+ from .models import RelatedModel, SimpleModel
+ 
+@@ -54,10 +55,31 @@ class AsyncQuerySetTest(TestCase):
+         results = []
+         async for s in SimpleModel.objects.prefetch_related(
+             Prefetch("relatedmodel_set", to_attr="prefetched_relatedmodel")
+-        ).aiterator():
++        ).aiterator(chunk_size=2000):
+             results.append(s.prefetched_relatedmodel)
+         self.assertCountEqual(results, [[self.r1], [self.r2], [self.r3]])
+ 
++    async def test_aiterator_prefetch_related_chunk_size_none(self):
++        msg = (
++            "Using QuerySet.aiterator() after prefetch_related() without "
++            "providing a chunk_size is deprecated"
++        )
++        qs = SimpleModel.objects.prefetch_related("relatedmodel_set").aiterator()
++
++        # RemovedInDjango71Warning: When the deprecation ends, replace with:
++        # with self.assertRaisesMessage(
++        #     ValueError,
++        #     "chunk_size must be provided when using QuerySet.aiterator() "
++        #     "after prefetch_related().",
++        # ):
++        #     async for _ in qs:
++        #         pass
++        results = []
++        with self.assertWarnsMessage(RemovedInDjango71Warning, msg):
++            async for s in qs:
++                results.append(s)
++        self.assertCountEqual(results, [self.s1, self.s2, self.s3])
++
+     async def test_aiterator_invalid_chunk_size(self):
+         msg = "Chunk size must be strictly positive."
+         for size in [0, -1]:

@@ -1,0 +1,62 @@
+commit 9465349120ef8a0b0689e12bcbfd05f3d173ebdf
+Author: Jacob Walls <jacobtylerwalls@gmail.com>
+Date:   Tue Jul 28 17:57:55 2026 -0400
+
+    Fixed #37238 -- Prevented fallback to python default for a pk with a db_default.
+    
+    Regression in a2348c85fc6c20087935c74cd99340dd4ef2dcdc.
+
+diff --git a/tests/field_defaults/models.py b/tests/field_defaults/models.py
+index 17191deefb..4275564113 100644
+--- a/tests/field_defaults/models.py
++++ b/tests/field_defaults/models.py
+@@ -68,3 +68,13 @@ class DBDefaultsFK(models.Model):
+     language_code = models.ForeignKey(
+         DBDefaultsPK, db_default="fr", on_delete=models.CASCADE
+     )
++
++
++class DBDefaultsOneToOnePK(models.Model):
++    language_code = models.OneToOneField(
++        DBDefaultsPK,
++        primary_key=True,
++        default="tr",
++        db_default="kr",
++        on_delete=models.CASCADE,
++    )
+diff --git a/tests/field_defaults/tests.py b/tests/field_defaults/tests.py
+index 9e9606e295..dd92b9ad44 100644
+--- a/tests/field_defaults/tests.py
++++ b/tests/field_defaults/tests.py
+@@ -23,6 +23,7 @@ from .models import (
+     DBDefaults,
+     DBDefaultsFK,
+     DBDefaultsFunction,
++    DBDefaultsOneToOnePK,
+     DBDefaultsPK,
+ )
+ 
+@@ -137,6 +138,23 @@ class DefaultTests(TestCase):
+         child2 = DBDefaultsFK.objects.create(language_code=parent2)
+         self.assertEqual(child2.language_code, parent2)
+ 
++    def test_primary_key_assigned_db_default_expression(self):
++        # Create the target of the foreign key.
++        DBDefaultsPK.objects.create(language_code="kr")
++        # Create an object that happens to match the python default for
++        # DBDefaultsOneToOnePK.language_code.
++        DBDefaultsPK.objects.create(language_code="tr")
++
++        related = DBDefaultsPK()
++        obj = DBDefaultsOneToOnePK(language_code_id=related.pk)
++        related.save()
++        obj.save()
++
++        # The python default is not used.
++        # This should either be "en" or "kr" depending on which model's
++        # DatabaseDefault is used, but this behavior varies across databases.
++        self.assertNotEqual(obj.language_code_id, "tr")
++
+     @skipUnlessDBFeature("supports_expression_defaults")
+     def test_case_when_db_default_returning(self):
+         m = DBDefaultsFunction.objects.create()

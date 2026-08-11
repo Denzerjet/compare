@@ -1,0 +1,24 @@
+commit 60a9c70496e5d7b971928ce3da5b47c8836a4def
+Author: Fashad Ahmed <fashad.ahmed20@gmail.com>
+Date:   Tue Apr 28 22:38:36 2026 +0200
+
+    Fixed #37067 -- Added trailing slash in django_file_prefixes().
+    
+    Ensure skip_file_prefixes does not match sibling packages like django*.
+    
+    Bug in f42b89f1bf49a5b89ed852b60f79342320a81c5e
+    and 34bd3ed944bf38792c631b55e581963d44d52284.
+
+diff --git a/django/utils/deprecation.py b/django/utils/deprecation.py
+index 89c9f71e55..f856582454 100644
+--- a/django/utils/deprecation.py
++++ b/django/utils/deprecation.py
+@@ -16,7 +16,7 @@ def django_file_prefixes():
+     file = getattr(django, "__file__", None)
+     if file is None:
+         return ()
+-    return (os.path.dirname(file),)
++    return (os.path.join(os.path.dirname(file), ""),)
+ 
+ 
+ class RemovedInNextVersionWarning(DeprecationWarning):

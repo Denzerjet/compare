@@ -1,0 +1,17 @@
+{
+  "source": "mined_by_hand",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "c2517faff335f683e1cbe55d9844910b3fb40670",
+  "base_commit": "ea6b17b4815d36f6cc7780fdec303d27997eca49",
+  "commit_date": "2026-07-27",
+  "author": "Vishy",
+  "subject": "Fixed #37198 -- Fixed content_disposition_header() quoting of filenames ending with newlines.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37198",
+  "selection_rationale": [
+    "Single source file changed, 1 effective line -- unambiguous ground truth.",
+    "Pure function; no database, no network, no GIS. Module runs in <0.01s.",
+    "fail_to_pass uses subTest, the case that breaks text-based output parsing.",
+    "Commit date 2026-07-27 is recent enough to sit inside the contamination window."
+  ],
+  "known_quirk": "The fix commit MODIFIES an existing test method rather than adding a new one, so fail_to_pass names a method that already existed and passed at base_commit. Mining must not assume fail_to_pass tests are absent before test.patch."
+}

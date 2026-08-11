@@ -1,0 +1,57 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "1085e5e17b7403b15c4eff397f3c98c15660f46d",
+  "base_commit": "75bb46cc454fdef0585f0a460f36f579b59f0356",
+  "commit_date": "2026-05-06",
+  "subject": "Fixed #36300 -- Restored the semantic where RemoteUserMiddleware.header corresponds to request.META under ASGI.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36300",
+  "source_files": [
+    "django/contrib/auth/middleware.py"
+  ],
+  "test_files": [
+    "tests/auth_tests/test_remote_user.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "auth_tests.test_remote_user"
+  ],
+  "narrowed_test_labels": [
+    "auth_tests.test_remote_user"
+  ],
+  "skipped_tests": [
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_csrf_validation_passes_after_process_request_login",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_header_disappears",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_inactive_user",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_known_user",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_last_login",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_no_remote_user",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_passing_explicit_none",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_unknown_user",
+    "auth_tests.test_remote_user.ASGISyncPathRemoteUserTest.test_user_switch_forces_new_login",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_csrf_validation_passes_after_process_request_login",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_header_disappears",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_inactive_user",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_known_user",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_last_login",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_no_remote_user",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_passing_explicit_none",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_unknown_user",
+    "auth_tests.test_remote_user.CustomHeaderASGISyncPathRemoteUserTest.test_user_switch_forces_new_login"
+  ],
+  "graded_runtime_sec": 2.08,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "8f52e9199b260cdacc5ad372692cddf2dcf76558",
+  "base_commit": "6baaf6a87706265446c4c7f2e3b96e3c49385b27",
+  "commit_date": "2026-08-05",
+  "subject": "Fixed #37224 -- Skipped questioner for field changes on unmanaged models.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/37224",
+  "source_files": [
+    "django/db/migrations/autodetector.py"
+  ],
+  "test_files": [
+    "tests/migrations/test_autodetector.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "migrations.test_autodetector"
+  ],
+  "narrowed_test_labels": [
+    "migrations.test_autodetector"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.58,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 2,
+    "residual_leaks": []
+  }
+}

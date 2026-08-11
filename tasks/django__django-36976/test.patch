@@ -1,0 +1,27 @@
+commit 72e8fdd603d40c36bab240c3bcc8e43a3d79c6f2
+Author: davitacols <davitacols@gmail.com>
+Date:   Tue Mar 24 14:30:10 2026 +0100
+
+    Fixed #36976 -- Made admin action counter a live region for screen readers.
+
+diff --git a/tests/admin_views/tests.py b/tests/admin_views/tests.py
+index ac4265c4b4..e01ab3b538 100644
+--- a/tests/admin_views/tests.py
++++ b/tests/admin_views/tests.py
+@@ -4646,6 +4646,16 @@ class AdminViewListEditable(TestCase):
+         # 1 select per object = 3 selects
+         self.assertContains(response, "<select", count=4)
+ 
++    def test_actions_counter_is_live_region(self):
++        response = self.client.get(reverse("admin:admin_views_person_changelist"))
++        self.assertContains(
++            response,
++            (
++                'class="action-counter" data-actions-icnt="3" '
++                'aria-live="polite" aria-atomic="true"'
++            ),
++        )
++
+     def test_post_messages(self):
+         # Ticket 12707: Saving inline editable should not show admin
+         # action warnings

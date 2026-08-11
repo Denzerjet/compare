@@ -1,0 +1,35 @@
+commit 7c125f6a6660a70a0568448b2e40db273a456479
+Author: Sarah Boyce <42296566+sarahboyce@users.noreply.github.com>
+Date:   Mon May 18 18:55:29 2026 +0200
+
+    Fixed #37105 -- Disallowed admin change form actions on different objects.
+    
+    Bug in f30acb184f75fd9260cfd6ddc48a3bbbd49f9c1d. Refs #12090.
+
+diff --git a/django/contrib/admin/options.py b/django/contrib/admin/options.py
+index e5a856e132..c35bf87e32 100644
+--- a/django/contrib/admin/options.py
++++ b/django/contrib/admin/options.py
+@@ -2105,6 +2105,9 @@ class ModelAdmin(BaseModelAdmin):
+                 and "_continue" not in request.POST
+                 and "_addanother" not in request.POST
+             ):
++                selected = request.POST.getlist(helpers.ACTION_CHECKBOX_NAME)
++                if len(selected) != 1 or selected[0] != str(obj.pk):
++                    raise BadRequest
+                 queryset = self.model._default_manager.get_queryset()
+                 if response := self.response_action(
+                     request, queryset, action_location=ActionLocation.CHANGE_FORM
+diff --git a/django/contrib/admin/templates/admin/change_form.html b/django/contrib/admin/templates/admin/change_form.html
+index f7dac55e0d..988e92e163 100644
+--- a/django/contrib/admin/templates/admin/change_form.html
++++ b/django/contrib/admin/templates/admin/change_form.html
+@@ -43,7 +43,7 @@
+ <div>
+ {% if action_form and not is_popup %}
+   {% change_form_admin_actions %}
+-  <input type="hidden" name="{{ action_checkbox_name }}" value="{{ object_id|unlocalize }}">
++  <input type="hidden" name="{{ action_checkbox_name }}" value="{{ original.pk|unlocalize }}">
+ {% endif %}
+ {% if is_popup %}<input type="hidden" name="{{ is_popup_var }}" value="1">{% endif %}
+ {% if to_field %}<input type="hidden" name="{{ to_field_var }}" value="{{ to_field }}">{% endif %}
