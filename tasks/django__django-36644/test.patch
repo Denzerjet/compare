@@ -1,0 +1,72 @@
+commit 6380e3f01e10f815de8c0223e3fd4bacb69f3808
+Author: Nilesh Kumar Pahari <nileshpahari@protonmail.com>
+Date:   Thu Feb 5 17:23:33 2026 -0500
+
+    Fixed #36644 -- Enabled empty order_by() to avoid pk ordering by first()/last().
+
+diff --git a/tests/get_earliest_or_latest/models.py b/tests/get_earliest_or_latest/models.py
+index bbf2075d36..91725865b1 100644
+--- a/tests/get_earliest_or_latest/models.py
++++ b/tests/get_earliest_or_latest/models.py
+@@ -21,6 +21,14 @@ class Comment(models.Model):
+     likes_count = models.PositiveIntegerField()
+ 
+ 
++class OrderedArticle(models.Model):
++    headline = models.CharField(max_length=100)
++    pub_date = models.DateField()
++
++    class Meta:
++        ordering = ["headline"]
++
++
+ # Ticket #23555 - model with an intentionally broken QuerySet.__iter__ method.
+ 
+ 
+diff --git a/tests/get_earliest_or_latest/tests.py b/tests/get_earliest_or_latest/tests.py
+index 49c803b73a..793fb12bb9 100644
+--- a/tests/get_earliest_or_latest/tests.py
++++ b/tests/get_earliest_or_latest/tests.py
+@@ -1,9 +1,10 @@
+ from datetime import datetime
++from unittest.mock import patch
+ 
+ from django.db.models import Avg
+ from django.test import TestCase
+ 
+-from .models import Article, Comment, IndexErrorArticle, Person
++from .models import Article, Comment, IndexErrorArticle, OrderedArticle, Person
+ 
+ 
+ class EarliestOrLatestTests(TestCase):
+@@ -265,3 +266,30 @@ class TestFirstLast(TestCase):
+             qs.first()
+         with self.assertRaisesMessage(TypeError, msg % "last"):
+             qs.last()
++
++    def test_first_last_empty_order_by_has_no_pk_ordering(self):
++        Article.objects.create(
++            headline="Article 1",
++            pub_date=datetime(2006, 9, 10),
++            expire_date=datetime(2056, 9, 11),
++        )
++
++        qs = Article.objects.order_by()
++        with patch.object(type(qs), "order_by") as mock_order_by:
++            qs.first()
++            mock_order_by.assert_not_called()
++            qs.last()
++            mock_order_by.assert_not_called()
++
++    def test_first_last_empty_order_by_clears_default_ordering(self):
++        OrderedArticle.objects.create(
++            headline="Article 1",
++            pub_date=datetime(2006, 9, 10),
++        )
++
++        qs = OrderedArticle.objects.order_by()
++        with patch.object(type(qs), "order_by") as mock_order_by:
++            qs.first()
++            mock_order_by.assert_not_called()
++            qs.last()
++            mock_order_by.assert_not_called()

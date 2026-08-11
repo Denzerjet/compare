@@ -11,8 +11,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Model provider SDKs land here in step 3, once the model set is chosen.
-models = []
+# Model provider SDKs. One extra per vendor so a run only needs the ones it uses.
+anthropic = ["anthropic>=0.40"]
 
 [project.scripts]
 harness = "harness.cli:main"

@@ -1,0 +1,44 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "3282d9f4edbe5d341a0fa2a8c62b435b3885ab64",
+  "base_commit": "977345f70df64a1d524e185e05b956e57c612110",
+  "commit_date": "2026-02-10",
+  "subject": "Fixed #36890 -- Supported StringAgg(distinct=True) on SQLite with the default delimiter.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36890",
+  "source_files": [
+    "django/db/models/aggregates.py"
+  ],
+  "test_files": [
+    "tests/aggregation/tests.py"
+  ],
+  "dropped_files": [
+    "docs/ref/models/querysets.txt",
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "aggregation.tests"
+  ],
+  "narrowed_test_labels": [
+    "aggregation.tests"
+  ],
+  "skipped_tests": [
+    "aggregation.tests.AggregateTestCase.test_any_value_not_supported",
+    "aggregation.tests.AggregateTestCase.test_distinct_on_stringagg",
+    "aggregation.tests.AggregateTestCase.test_order_by_in_subquery",
+    "aggregation.tests.AggregateTestCase.test_string_agg_filter_outerref",
+    "aggregation.tests.AggregateTestCase.test_string_agg_jsonfield_order_by",
+    "aggregation.tests.AggregateTestCase.test_string_agg_order_by"
+  ],
+  "graded_runtime_sec": 1.52,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

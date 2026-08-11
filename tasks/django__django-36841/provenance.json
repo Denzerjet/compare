@@ -1,0 +1,37 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "7732f942a98a709750fc1fed2c69741183844a3c",
+  "base_commit": "56ed37e17e5b1a509aa68a0c797dcff34fcc1366",
+  "commit_date": "2026-02-10",
+  "subject": "Fixed #36841 -- Made multipart parser class pluggable on HttpRequest.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36841",
+  "source_files": [
+    "django/http/request.py"
+  ],
+  "test_files": [
+    "tests/requests_tests/tests.py"
+  ],
+  "dropped_files": [
+    "docs/ref/request-response.txt",
+    "docs/releases/6.1.txt"
+  ],
+  "full_test_labels": [
+    "requests_tests.tests"
+  ],
+  "narrowed_test_labels": [
+    "requests_tests.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.37,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

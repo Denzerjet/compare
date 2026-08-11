@@ -1,0 +1,41 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "12bb16da8fbadac34e2de318cc79d7d765f35a96",
+  "base_commit": "787166fe27b0e7c7f97505da5766cfa72e76ae25",
+  "commit_date": "2026-03-09",
+  "subject": "Fixed #36293 -- Avoided buffering streaming responses in GZipMiddleware.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36293",
+  "source_files": [
+    "django/utils/text.py"
+  ],
+  "test_files": [
+    "tests/decorators/test_gzip.py",
+    "tests/utils_tests/test_text.py"
+  ],
+  "dropped_files": [
+    "docs/howto/outputting-csv.txt"
+  ],
+  "full_test_labels": [
+    "decorators.test_gzip",
+    "utils_tests.test_text"
+  ],
+  "narrowed_test_labels": [
+    "decorators.test_gzip",
+    "utils_tests.test_text"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.52,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

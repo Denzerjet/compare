@@ -1,0 +1,33 @@
+commit 169152f8f5ac586e19779faf9943086fe0f416e9
+Author: AbhimanyuGit2507 <avi2507.work@gmail.com>
+Date:   Sat Feb 14 01:59:03 2026 +0530
+
+    Fixed #36839 -- Warned when model renames encounter conflicts from stale ContentTypes.
+
+diff --git a/django/contrib/contenttypes/management/__init__.py b/django/contrib/contenttypes/management/__init__.py
+index 929e44f390..55b08870d8 100644
+--- a/django/contrib/contenttypes/management/__init__.py
++++ b/django/contrib/contenttypes/management/__init__.py
+@@ -1,3 +1,5 @@
++import warnings
++
+ from django.apps import apps as global_apps
+ from django.db import DEFAULT_DB_ALIAS, IntegrityError, migrations, router, transaction
+ 
+@@ -28,8 +30,14 @@ class RenameContentType(migrations.RunPython):
+                     content_type.save(using=db, update_fields={"model"})
+             except IntegrityError:
+                 # Gracefully fallback if a stale content type causes a
+-                # conflict as remove_stale_contenttypes will take care of
+-                # asking the user what should be done next.
++                # conflict. Warn the user so they can run the
++                # remove_stale_contenttypes management command.
++                warnings.warn(
++                    f"Could not rename content type '{self.app_label}.{old_model}' "
++                    f"to '{new_model}' due to an existing conflicting content type. "
++                    "Run 'remove_stale_contenttypes' to clean up stale entries.",
++                    RuntimeWarning,
++                )
+                 content_type.model = old_model
+             else:
+                 # Clear the cache as the `get_by_natural_key()` call will cache

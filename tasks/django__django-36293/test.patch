@@ -1,0 +1,96 @@
+commit 12bb16da8fbadac34e2de318cc79d7d765f35a96
+Author: farhan <farhanalirazaazeemi@gmail.com>
+Date:   Sat Dec 13 23:33:33 2025 +0500
+
+    Fixed #36293 -- Avoided buffering streaming responses in GZipMiddleware.
+    
+    This avoids latency and/or blocking.
+    
+    The example of streaming a CSV file was rewritten to employ batching for
+    greater efficiency in all layers (db, HTTP, etc.). The improved
+    performance from batching should outweigh the drag introduced by an
+    additional byte for each flush.
+    
+    Co-authored-by: huoyinghui <huoyinghui@users.noreply.github.com>
+
+diff --git a/tests/decorators/test_gzip.py b/tests/decorators/test_gzip.py
+index 2d64c171f7..8cd0869b53 100644
+--- a/tests/decorators/test_gzip.py
++++ b/tests/decorators/test_gzip.py
+@@ -1,6 +1,6 @@
+ from inspect import iscoroutinefunction
+ 
+-from django.http import HttpRequest, HttpResponse
++from django.http import HttpRequest, HttpResponse, StreamingHttpResponse
+ from django.test import SimpleTestCase
+ from django.views.decorators.gzip import gzip_page
+ 
+@@ -44,3 +44,33 @@ class GzipPageTests(SimpleTestCase):
+         response = await async_view(request)
+         self.assertEqual(response.status_code, 200)
+         self.assertEqual(response.get("Content-Encoding"), "gzip")
++
++    def test_streaming_response_yields_chunks_incrementally(self):
++        @gzip_page
++        def stream_view(request):
++            return StreamingHttpResponse(self.content.encode() for _ in range(5))
++
++        request = HttpRequest()
++        request.META["HTTP_ACCEPT_ENCODING"] = "gzip"
++        response = stream_view(request)
++        compressed_chunks = list(response)
++        # Each input chunk should produce compressed output, not buffer
++        # everything into a single chunk.
++        self.assertGreater(len(compressed_chunks), 2)
++
++    async def test_async_streaming_response_yields_chunks_incrementally(self):
++        @gzip_page
++        async def stream_view(request):
++            async def content():
++                for _ in range(5):
++                    yield self.content.encode()
++
++            return StreamingHttpResponse(content())
++
++        request = HttpRequest()
++        request.META["HTTP_ACCEPT_ENCODING"] = "gzip"
++        response = await stream_view(request)
++        compressed_chunks = [chunk async for chunk in response]
++        # Each input chunk should produce compressed output, not buffer
++        # everything into a single chunk.
++        self.assertGreater(len(compressed_chunks), 2)
+diff --git a/tests/utils_tests/test_text.py b/tests/utils_tests/test_text.py
+index 50e205a254..101943957c 100644
+--- a/tests/utils_tests/test_text.py
++++ b/tests/utils_tests/test_text.py
+@@ -1,3 +1,4 @@
++import gzip
+ import json
+ import sys
+ 
+@@ -404,13 +405,18 @@ class TestUtilsText(SimpleTestCase):
+             text.get_valid_filename("$.$.$")
+ 
+     def test_compress_sequence(self):
+-        data = [{"key": i} for i in range(10)]
+-        seq = list(json.JSONEncoder().iterencode(data))
+-        seq = [s.encode() for s in seq]
+-        actual_length = len(b"".join(seq))
+-        out = text.compress_sequence(seq)
+-        compressed_length = len(b"".join(out))
+-        self.assertLess(compressed_length, actual_length)
++        data = [{"key": i} for i in range(100)]
++        seq = [s.encode() for s in json.JSONEncoder().iterencode(data)]
++        original = b"".join(seq)
++        batch_size = 256
++        batched_seq = (
++            original[i : i + batch_size] for i in range(0, len(original), batch_size)
++        )
++        compressed_chunks = list(text.compress_sequence(batched_seq))
++        out = b"".join(compressed_chunks)
++        self.assertEqual(gzip.decompress(out), original)
++        self.assertLess(len(out), len(original))
++        self.assertGreater(len(compressed_chunks), 2)
+ 
+     def test_format_lazy(self):
+         self.assertEqual("django/test", format_lazy("{}/{}", "django", lazystr("test")))

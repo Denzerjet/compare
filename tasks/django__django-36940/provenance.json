@@ -1,0 +1,34 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "b33c31d992591bc8e8d20ac156809e4ae5b45375",
+  "base_commit": "864850b20f7ef89ed2f6bd8baf1a45acc9245a6c",
+  "commit_date": "2026-03-06",
+  "subject": "Fixed #36940 -- Fixed script name edge case in ASGIRequest.path_info.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36940",
+  "source_files": [
+    "django/core/handlers/asgi.py"
+  ],
+  "test_files": [
+    "tests/handlers/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "handlers.tests"
+  ],
+  "narrowed_test_labels": [
+    "handlers.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.43,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

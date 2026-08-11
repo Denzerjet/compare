@@ -1,0 +1,66 @@
+commit 169152f8f5ac586e19779faf9943086fe0f416e9
+Author: AbhimanyuGit2507 <avi2507.work@gmail.com>
+Date:   Sat Feb 14 01:59:03 2026 +0530
+
+    Fixed #36839 -- Warned when model renames encounter conflicts from stale ContentTypes.
+
+diff --git a/tests/contenttypes_tests/test_operations.py b/tests/contenttypes_tests/test_operations.py
+index d44648d9fe..9f6506640a 100644
+--- a/tests/contenttypes_tests/test_operations.py
++++ b/tests/contenttypes_tests/test_operations.py
+@@ -154,13 +154,19 @@ class ContentTypeOperationsTests(TransactionTestCase):
+     def test_content_type_rename_conflict(self):
+         ContentType.objects.create(app_label="contenttypes_tests", model="foo")
+         ContentType.objects.create(app_label="contenttypes_tests", model="renamedfoo")
+-        call_command(
+-            "migrate",
+-            "contenttypes_tests",
+-            database="default",
+-            interactive=False,
+-            verbosity=0,
+-        )
++        msg = (
++            "Could not rename content type 'contenttypes_tests.foo' to "
++            "'renamedfoo' due to an existing conflicting content type. "
++            "Run 'remove_stale_contenttypes' to clean up stale entries."
++        )
++        with self.assertWarnsMessage(RuntimeWarning, msg):
++            call_command(
++                "migrate",
++                "contenttypes_tests",
++                database="default",
++                interactive=False,
++                verbosity=0,
++            )
+         self.assertTrue(
+             ContentType.objects.filter(
+                 app_label="contenttypes_tests", model="foo"
+@@ -171,14 +177,20 @@ class ContentTypeOperationsTests(TransactionTestCase):
+                 app_label="contenttypes_tests", model="renamedfoo"
+             ).exists()
+         )
+-        call_command(
+-            "migrate",
+-            "contenttypes_tests",
+-            "zero",
+-            database="default",
+-            interactive=False,
+-            verbosity=0,
+-        )
++        msg = (
++            "Could not rename content type 'contenttypes_tests.renamedfoo' to "
++            "'foo' due to an existing conflicting content type. "
++            "Run 'remove_stale_contenttypes' to clean up stale entries."
++        )
++        with self.assertWarnsMessage(RuntimeWarning, msg):
++            call_command(
++                "migrate",
++                "contenttypes_tests",
++                "zero",
++                database="default",
++                interactive=False,
++                verbosity=0,
++            )
+         self.assertTrue(
+             ContentType.objects.filter(
+                 app_label="contenttypes_tests", model="foo"

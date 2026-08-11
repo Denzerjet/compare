@@ -1,0 +1,127 @@
+# Model registry. Prices are USD per million tokens, used only to report cost --
+# never to choose a model, and never fed to the model itself.
+#
+# `context_window` is load-bearing: run/tools.py derives its read bound from the
+# SMALLEST window across the models being compared, so every model sees identically
+# sized tool results. If a smaller-window model is added later, the bound tightens
+# for everyone or the comparison stops being like-for-like.
+
+models:
+  # Debug/cheap tier. Also the tightest configuration in the lineup: its 200k
+  # window is the floor the read bound was derived against, so if a run fits here
+  # it fits everywhere.
+  haiku-4-5:
+    provider: anthropic
+    model_id: claude-haiku-4-5
+    context_window: 200000
+    max_output_tokens: 8192
+    price_input_per_mtok: 1.00
+    price_output_per_mtok: 5.00
+    price_cache_write_per_mtok: 1.25
+    price_cache_read_per_mtok: 0.10
+    # A 4.5-generation model: `effort` is rejected outright, and adaptive thinking
+    # does not exist -- thinking needs the older fixed `budget_tokens` form, and
+    # omitting the parameter means no thinking. Left off, which is both cheapest
+    # and the only setting shared with every other generation.
+    #
+    # Its prompt-cache minimum is 4096 tokens (vs 1024 on Sonnet 5), so the first
+    # step or two legitimately will NOT cache. A low cache % early on this model is
+    # expected, not the misplaced-breakpoint bug.
+    thinking: off
+
+  # Verified against developers.openai.com on 2026-08-10 rather than written from
+  # memory: 400k context, 128k max output, function calling supported. Prices are
+  # standard-tier per MTok.
+  gpt-5-nano:
+    provider: openai
+    model_id: gpt-5-nano
+    context_window: 400000
+    max_output_tokens: 8192
+    price_input_per_mtok: 0.05
+    price_output_per_mtok: 0.40
+    # OpenAI caches automatically for prompts over ~1k tokens -- no cache_control to
+    # place, and the discount is 10x on reads ($0.005) with NO separate write charge.
+    # That differs from Anthropic, which bills writes at 1.25x. So `cache_write` is
+    # set to the plain input price: nothing extra is charged for a cache miss.
+    price_cache_write_per_mtok: 0.05
+    price_cache_read_per_mtok: 0.005
+    # No adaptive-thinking equivalent to configure through our loop; GPT-5 reasoning
+    # is controlled by its own parameters, left at provider default for the same
+    # reason as Sonnet -- reasoning depth is a model property, not scaffolding.
+    thinking: default
+
+  # gemini-2.5-flash-lite was the original pick and had to be replaced: it still
+  # appears in models.list() but returns 404 for new keys ("no longer available to
+  # new users"). Listed-but-unusable, so the model list is not a reliability check.
+  #
+  # Pinned to a concrete version, NOT the `gemini-flash-lite-latest` alias. An alias
+  # can change under us between runs, which would break the frozen-config guarantee
+  # that makes results poolable -- the same reason every other constant here is fixed.
+  #
+  # Prices verified on ai.google.dev 2026-08-10, standard tier. Note this is the most
+  # expensive OUTPUT of the three ($2.50/MTok vs Haiku's $5.00 input but $0.40 for
+  # nano), so cost ordering across the lineup is not the same as capability ordering.
+  gemini-3-5-flash-lite:
+    provider: google
+    model_id: gemini-3.5-flash-lite
+    context_window: 1048576
+    max_output_tokens: 8192
+    price_input_per_mtok: 0.30
+    price_output_per_mtok: 2.50
+    # Gemini caches implicitly with no separate write charge, so cache_write is the
+    # plain input price. Storage ($1/MTok/hour) is not modelled: implicit caching has
+    # a short TTL and we never create explicit cached content.
+    price_cache_write_per_mtok: 0.30
+    price_cache_read_per_mtok: 0.03
+    thinking: default
+
+  sonnet-5:
+    provider: anthropic
+    model_id: claude-sonnet-5
+    context_window: 1000000
+    max_output_tokens: 8192
+    # Introductory pricing runs through 2026-08-31; standard is 3.00 / 15.00.
+    # Whichever applies at run time is recorded in results/<run_id>/run.json so a
+    # cost figure is always reproducible after the fact.
+    price_input_per_mtok: 2.00
+    price_output_per_mtok: 10.00
+    price_cache_write_per_mtok: 2.50   # 1.25x input, 5-minute TTL
+    price_cache_read_per_mtok: 0.20    # 0.1x input
+    # Sonnet 5 runs adaptive thinking when `thinking` is omitted. Left at the
+    # provider default deliberately: thinking depth is a property of the model, not
+    # harness scaffolding, and forcing it off would measure a configuration nobody
+    # deploys. Must be stated in the writeup when models span generations, since
+    # older models have no equivalent control.
+    thinking: default
+
+# The bound on a single tool result, in lines. Derived, not chosen:
+#
+#   worst-case transcript = prompt + max_steps x (max_output_per_step + max_result)
+#
+# Against a 200k floor with ~8k reserved for the response, at max_steps 50 and
+# ~400 output tokens/step, ~3.3k tokens per result is the ceiling -- about 250
+# lines of Python at ~13 tokens/line. 200 leaves margin.
+#
+# Assumes a 200k floor even though Sonnet 5 has 1M, so the figure stays valid if a
+# smaller-window model joins the comparison. Being conservative costs only a little
+# context per read.
+# Bounds on tool output. Reads are effectively UNBOUNDED for this codebase: the
+# largest module in django/ is 3,063 lines (db/models/query.py), so 5,000 covers
+# every file whole. The remaining ceiling only stops a pathological read of some
+# enormous generated file.
+#
+# This is a deliberate design position, not a cost optimisation: context is treated
+# as a limitation OF THE MODEL. A model that fills its window by reading carelessly
+# has failed the task, and `context_exceeded` scores as a failure. We are not
+# equalising for window size -- Haiku's 200k and Sonnet's 1M are real differences in
+# capability, and the evaluation reports them rather than hiding them.
+#
+# Measured justification for removing the old 200/400-line bound: on task 15759 the
+# model found the correct file at step 6 and did not edit until step 29 -- 23 steps
+# spent traversing a 2,917-line file through a 400-line window, with ~0% tool error
+# rate and every edit landing on the right file. Localisation was never the problem;
+# comprehension of an already-open file was, and paging was the cause.
+tool_limits:
+  max_read_lines: 5000
+  max_grep_matches: 50
+  max_list_entries: 200

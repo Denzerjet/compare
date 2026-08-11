@@ -1,0 +1,25 @@
+commit f45bfa5e2801545c1c8787f59bee3867c9928871
+Author: Marco Aurélio da Rosa Haubrich <marhaubrich@ucs.br>
+Date:   Wed Feb 18 17:11:14 2026 -0300
+
+    Fixed #36935 -- Added fallback in ContentType.app_labeled_name when model_class() is None.
+    
+    Updated ContentType.app_labeled_name to include the app_label in its string representation.
+    This removed ambiguity for content types whose models were not present in the current codebase
+    (for example, when multiple applications share the same database).
+    
+    Adjusted related tests to reflect the new representation.
+
+diff --git a/django/contrib/contenttypes/models.py b/django/contrib/contenttypes/models.py
+index 1ae45dea95..f634976a93 100644
+--- a/django/contrib/contenttypes/models.py
++++ b/django/contrib/contenttypes/models.py
+@@ -156,7 +156,7 @@ class ContentType(models.Model):
+     def app_labeled_name(self):
+         model = self.model_class()
+         if not model:
+-            return self.model
++            return "%s | %s" % (self.app_label, self.model)
+         return "%s | %s" % (
+             model._meta.app_config.verbose_name,
+             model._meta.verbose_name,

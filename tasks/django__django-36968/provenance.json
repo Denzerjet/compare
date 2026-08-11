@@ -1,0 +1,35 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "864850b20f7ef89ed2f6bd8baf1a45acc9245a6c",
+  "base_commit": "f8665b1a7ff5e98d84f66ad0e958c3f175aa5d8b",
+  "commit_date": "2026-03-06",
+  "subject": "Fixed #36968 -- Improved error message when collectstatic can't find a referenced file.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36968",
+  "source_files": [
+    "django/contrib/staticfiles/storage.py",
+    "django/contrib/staticfiles/management/commands/collectstatic.py"
+  ],
+  "test_files": [
+    "tests/staticfiles_tests/test_storage.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "staticfiles_tests.test_storage"
+  ],
+  "narrowed_test_labels": [
+    "staticfiles_tests.test_storage"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 2.99,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

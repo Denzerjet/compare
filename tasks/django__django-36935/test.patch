@@ -1,0 +1,43 @@
+commit f45bfa5e2801545c1c8787f59bee3867c9928871
+Author: Marco Aurélio da Rosa Haubrich <marhaubrich@ucs.br>
+Date:   Wed Feb 18 17:11:14 2026 -0300
+
+    Fixed #36935 -- Added fallback in ContentType.app_labeled_name when model_class() is None.
+    
+    Updated ContentType.app_labeled_name to include the app_label in its string representation.
+    This removed ambiguity for content types whose models were not present in the current codebase
+    (for example, when multiple applications share the same database).
+    
+    Adjusted related tests to reflect the new representation.
+
+diff --git a/tests/contenttypes_tests/test_models.py b/tests/contenttypes_tests/test_models.py
+index b63c57ef09..542f0c8fd8 100644
+--- a/tests/contenttypes_tests/test_models.py
++++ b/tests/contenttypes_tests/test_models.py
+@@ -145,7 +145,7 @@ class ContentTypesTests(TestCase):
+         ct = ContentType.objects.get_for_model(ModelCreatedOnTheFly)
+         self.assertEqual(ct.app_label, "contenttypes_tests")
+         self.assertEqual(ct.model, "modelcreatedonthefly")
+-        self.assertEqual(str(ct), "modelcreatedonthefly")
++        self.assertEqual(str(ct), "contenttypes_tests | modelcreatedonthefly")
+ 
+     def test_get_for_concrete_model(self):
+         """
+@@ -269,7 +269,7 @@ class ContentTypesTests(TestCase):
+             app_label="contenttypes",
+             model="OldModel",
+         )
+-        self.assertEqual(str(ct), "OldModel")
++        self.assertEqual(str(ct), "contenttypes | OldModel")
+         self.assertIsNone(ct.model_class())
+ 
+         # Stale ContentTypes can be fetched like any other object.
+@@ -318,7 +318,7 @@ class ContentTypesTests(TestCase):
+ 
+     def test_app_labeled_name_unknown_model(self):
+         ct = ContentType(app_label="contenttypes_tests", model="unknown")
+-        self.assertEqual(ct.app_labeled_name, "unknown")
++        self.assertEqual(ct.app_labeled_name, "contenttypes_tests | unknown")
+ 
+ 
+ class TestRouter:

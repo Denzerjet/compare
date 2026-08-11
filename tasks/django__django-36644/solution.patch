@@ -1,0 +1,28 @@
+commit 6380e3f01e10f815de8c0223e3fd4bacb69f3808
+Author: Nilesh Kumar Pahari <nileshpahari@protonmail.com>
+Date:   Thu Feb 5 17:23:33 2026 -0500
+
+    Fixed #36644 -- Enabled empty order_by() to avoid pk ordering by first()/last().
+
+diff --git a/django/db/models/query.py b/django/db/models/query.py
+index afb3aac5cb..76d0f449a6 100644
+--- a/django/db/models/query.py
++++ b/django/db/models/query.py
+@@ -1158,7 +1158,7 @@ class QuerySet(AltersData):
+ 
+     def first(self):
+         """Return the first object of a query or None if no match is found."""
+-        if self.ordered:
++        if self.ordered or not self.query.default_ordering:
+             queryset = self
+         else:
+             self._check_ordering_first_last_queryset_aggregation(method="first")
+@@ -1171,7 +1171,7 @@ class QuerySet(AltersData):
+ 
+     def last(self):
+         """Return the last object of a query or None if no match is found."""
+-        if self.ordered:
++        if self.ordered or not self.query.default_ordering:
+             queryset = self.reverse()
+         else:
+             self._check_ordering_first_last_queryset_aggregation(method="last")

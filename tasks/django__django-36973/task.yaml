@@ -121,8 +121,8 @@ tags:
   area: django/db/models
   loc_changed: 40
   files_changed: 1
-  statement_chars: 1777
+  statement_chars: 1702
   has_reproduction: true
-  statement_source: trac_description
+  statement_source: hand_edited
   statement_needs_review: true
   hunks_changed: 3

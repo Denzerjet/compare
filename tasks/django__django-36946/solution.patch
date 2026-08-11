@@ -1,0 +1,23 @@
+commit b415cef5d21cd5beac212a833f9f0b7727899f64
+Author: S​age Abdullah <me@laymonage.com>
+Date:   Fri Feb 27 22:12:07 2026 +0000
+
+    Fixed #36946 -- Respected test database name when running tests in parallel on SQLite.
+    
+    The "spawn" and "forkserver" multiprocessing modes were affected.
+
+diff --git a/django/db/backends/sqlite3/creation.py b/django/db/backends/sqlite3/creation.py
+index d57bf9ee1f..7105b73257 100644
+--- a/django/db/backends/sqlite3/creation.py
++++ b/django/db/backends/sqlite3/creation.py
+@@ -142,8 +142,9 @@ class DatabaseCreation(BaseDatabaseCreation):
+             connection_str = (
+                 f"file:memorydb_{alias}_{_worker_id}?mode=memory&cache=shared"
+             )
++            source_db_name = settings_dict["NAME"]
+             source_db = self.connection.Database.connect(
+-                f"file:{alias}_{_worker_id}.sqlite3?mode=ro", uri=True
++                f"file:{source_db_name}?mode=ro", uri=True
+             )
+             target_db = sqlite3.connect(connection_str, uri=True)
+             source_db.backup(target_db)

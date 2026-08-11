@@ -27,6 +27,11 @@ MANIFEST = TASKS_DIR / "manifest.jsonl"
 # editable after the fact, and the commit-subject fallback is post-fix by nature.
 LEAK_MARKERS = ("--- a/", "+++ b/", "@@ ", "github.com/django/django/pull")
 
+# Presence of this string in problem_statement.md makes the file authoritative:
+# mining reads it instead of regenerating it. Kept as an HTML comment so it is
+# invisible in rendered markdown but survives a round trip through the file.
+HAND_EDITED_MARKER = "<!-- hand-edited: do not regenerate -->"
+
 
 def django_version_at(sha: str, repo: Path | None = None) -> str:
     """VERSION tuple from django/__init__.py at a commit, e.g. '5.2.dev'."""
@@ -100,7 +105,16 @@ def write_task(
 
     (out / "test.patch").write_text(sp.test_patch)
     (out / "solution.patch").write_text(sp.solution_patch)
-    (out / "problem_statement.md").write_text(statement)
+
+    # A hand-edited statement is never regenerated. Without this, re-mining would
+    # silently revert a human's leak removal -- the one file here a person has any
+    # reason to touch, and the only one that used to carry no warning.
+    stmt_path = out / "problem_statement.md"
+    if HAND_EDITED_MARKER in (stmt_path.read_text() if stmt_path.exists() else ""):
+        statement = stmt_path.read_text()
+        statement_source = "hand_edited"
+    else:
+        stmt_path.write_text(statement)
 
     spec = {
         "task_id": cand.task_id,

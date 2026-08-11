@@ -1,0 +1,35 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "e6108b7388775f4996a5906e0525fbdd40d2df51",
+  "base_commit": "f991a1883889a520679fe41112281435581211e1",
+  "commit_date": "2026-02-26",
+  "subject": "Fixed #36750 -- Made ordering of M2M objects deterministic in serializers.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36750",
+  "source_files": [
+    "django/core/serializers/python.py",
+    "django/core/serializers/xml_serializer.py"
+  ],
+  "test_files": [
+    "tests/serializers/test_natural.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "serializers.test_natural"
+  ],
+  "narrowed_test_labels": [
+    "serializers.test_natural"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.64,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": true,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 1,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

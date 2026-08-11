@@ -1,0 +1,22 @@
+commit e84dc8715e91d51364ba6bda2b2fb07e7a8b750e
+Author: sammiee5311 <sammiee5311@gmail.com>
+Date:   Mon Feb 16 12:21:03 2026 +0900
+
+    Fixed #36931 -- Handled LookupError in multipart parser for invalid RFC 2231 encoding.
+    
+    Added LookupError to the except clause so invalid headers are silently
+    skipped, consistent with other malformed header handling.
+
+diff --git a/django/http/multipartparser.py b/django/http/multipartparser.py
+index d420c255eb..b834b8b31b 100644
+--- a/django/http/multipartparser.py
++++ b/django/http/multipartparser.py
+@@ -726,7 +726,7 @@ def parse_boundary_stream(stream, max_header_size):
+             name = header_name.lower().rstrip(" ")
+             value, params = parse_header_parameters(value_and_params.lstrip(" "))
+             params = {k: v.encode() for k, v in params.items()}
+-        except ValueError:  # Invalid header.
++        except (ValueError, LookupError):  # Invalid header.
+             continue
+ 
+         if name == "content-disposition":

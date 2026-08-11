@@ -1,0 +1,35 @@
+commit 3282d9f4edbe5d341a0fa2a8c62b435b3885ab64
+Author: varunkasyap <varunkasyap@hotmail.com>
+Date:   Mon Feb 2 13:50:16 2026 +0530
+
+    Fixed #36890 -- Supported StringAgg(distinct=True) on SQLite with the default delimiter.
+
+diff --git a/django/db/models/aggregates.py b/django/db/models/aggregates.py
+index 1cf82416cb..d1139e8bcc 100644
+--- a/django/db/models/aggregates.py
++++ b/django/db/models/aggregates.py
+@@ -369,6 +369,24 @@ class StringAgg(Aggregate):
+         return sql, (*params, *delimiter_params)
+ 
+     def as_sqlite(self, compiler, connection, **extra_context):
++        if (
++            self.distinct
++            and isinstance(self.delimiter.value, Value)
++            and self.delimiter.value.value == ","
++        ):
++            clone = self.copy()
++            source_expressions = clone.get_source_expressions()
++            clone.set_source_expressions(
++                source_expressions[:1] + source_expressions[2:]
++            )
++
++            return clone.as_sql(
++                compiler,
++                connection,
++                function="GROUP_CONCAT",
++                **extra_context,
++            )
++
+         if connection.get_database_version() < (3, 44):
+             return self.as_sql(
+                 compiler,

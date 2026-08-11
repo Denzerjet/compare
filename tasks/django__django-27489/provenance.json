@@ -1,0 +1,41 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "a040f555069971192220122555f187530d679d53",
+  "base_commit": "187a789f99ecbc708de517c6b54d480b68ba59fe",
+  "commit_date": "2026-02-27",
+  "subject": "Fixed #27489 -- Renamed permissions upon model renaming in migrations.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/27489",
+  "source_files": [
+    "django/contrib/auth/management/__init__.py",
+    "django/contrib/auth/apps.py"
+  ],
+  "test_files": [
+    "tests/auth_tests/operations_migrations/0001_initial.py",
+    "tests/auth_tests/operations_migrations/0002_rename_oldmodel_to_newmodel.py",
+    "tests/auth_tests/operations_migrations/__init__.py",
+    "tests/auth_tests/test_management.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.1.txt",
+    "docs/topics/auth/default.txt"
+  ],
+  "full_test_labels": [
+    "auth_tests.test_management"
+  ],
+  "narrowed_test_labels": [
+    "auth_tests.test_management"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 2.05,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

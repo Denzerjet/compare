@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "169152f8f5ac586e19779faf9943086fe0f416e9",
+  "base_commit": "69d47f921979aba5ad5d876bff015b55121fc49c",
+  "commit_date": "2026-02-25",
+  "subject": "Fixed #36839 -- Warned when model renames encounter conflicts from stale ContentTypes.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36839",
+  "source_files": [
+    "django/contrib/contenttypes/management/__init__.py"
+  ],
+  "test_files": [
+    "tests/contenttypes_tests/test_operations.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "contenttypes_tests.test_operations"
+  ],
+  "narrowed_test_labels": [
+    "contenttypes_tests.test_operations"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.63,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

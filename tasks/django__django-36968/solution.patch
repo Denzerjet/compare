@@ -1,0 +1,69 @@
+commit 864850b20f7ef89ed2f6bd8baf1a45acc9245a6c
+Author: James Bligh <blighj@users.noreply.github.com>
+Date:   Fri Mar 6 15:47:08 2026 +0000
+
+    Fixed #36968 -- Improved error message when collectstatic can't find a referenced file.
+
+diff --git a/django/contrib/staticfiles/management/commands/collectstatic.py b/django/contrib/staticfiles/management/commands/collectstatic.py
+index 1c3f8ba26d..6fcff46d93 100644
+--- a/django/contrib/staticfiles/management/commands/collectstatic.py
++++ b/django/contrib/staticfiles/management/commands/collectstatic.py
+@@ -154,7 +154,11 @@ class Command(BaseCommand):
+                     # Add a blank line before the traceback, otherwise it's
+                     # too easy to miss the relevant part of the error message.
+                     self.stderr.write()
+-                    raise processed
++                    # Re-raise exceptions as CommandError and display notes.
++                    message = str(processed)
++                    if hasattr(processed, "__notes__"):
++                        message += "\n" + "\n".join(processed.__notes__)
++                    raise CommandError(message) from processed
+                 if processed:
+                     self.log(
+                         "Post-processed '%s' as '%s'" % (original_path, processed_path),
+diff --git a/django/contrib/staticfiles/storage.py b/django/contrib/staticfiles/storage.py
+index c889bcb4a4..e0af406384 100644
+--- a/django/contrib/staticfiles/storage.py
++++ b/django/contrib/staticfiles/storage.py
+@@ -232,6 +232,16 @@ class HashedFilesMixin:
+         if template is None:
+             template = self.default_template
+ 
++        def _line_at_position(content, position):
++            start = content.rfind("\n", 0, position) + 1
++            end = content.find("\n", position)
++            end = end if end != -1 else len(content)
++            line_num = content.count("\n", 0, start) + 1
++            msg = f"\n{line_num}: {content[start:end]}"
++            if len(msg) > 79:
++                return f"\n{line_num}"
++            return msg
++
+         def converter(matchobj):
+             """
+             Convert the matched URL to a normalized and hashed URL.
+@@ -276,12 +286,18 @@ class HashedFilesMixin:
+ 
+             # Determine the hashed name of the target file with the storage
+             # backend.
+-            hashed_url = self._url(
+-                self._stored_name,
+-                unquote(target_name),
+-                force=True,
+-                hashed_files=hashed_files,
+-            )
++            try:
++                hashed_url = self._url(
++                    self._stored_name,
++                    unquote(target_name),
++                    force=True,
++                    hashed_files=hashed_files,
++                )
++            except ValueError as exc:
++                line = _line_at_position(matchobj.string, matchobj.start())
++                note = f"{name!r} contains this reference {matched!r} on line {line}"
++                exc.add_note(note)
++                raise exc
+ 
+             transformed_url = "/".join(
+                 url_path.split("/")[:-1] + hashed_url.split("/")[-1:]

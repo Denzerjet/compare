@@ -1,0 +1,36 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "e84dc8715e91d51364ba6bda2b2fb07e7a8b750e",
+  "base_commit": "acd0bec51366e259b4c2b43e4c09755541cdf560",
+  "commit_date": "2026-02-24",
+  "subject": "Fixed #36931 -- Handled LookupError in multipart parser for invalid RFC 2231 encoding.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36931",
+  "source_files": [
+    "django/http/multipartparser.py"
+  ],
+  "test_files": [
+    "tests/requests_tests/tests.py"
+  ],
+  "dropped_files": [],
+  "full_test_labels": [
+    "requests_tests.tests"
+  ],
+  "narrowed_test_labels": [
+    "requests_tests.tests"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.73,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

@@ -6,9 +6,44 @@
 # Every value here is copied into results/<run_id>/run.json.
 
 # Max agent-loop iterations before the harness stops the model and grades
-# whatever patch exists. Hitting this cap is a FAILURE TO SOLVE, scored as
-# such. Not to be raised if models cluster at the ceiling.
-max_steps: 50
+# whatever patch exists. Hitting this cap is a FAILURE TO SOLVE, scored as such.
+# Not to be raised if models cluster at the ceiling.
+#
+# 10, set for cost control. Cumulative cache-read tokens grow roughly
+# quadratically in step count (measured: 1.64M per task at ~45 steps, 99.8% of all
+# input), so this is by far the strongest cost lever -- correcting two earlier
+# claims of mine that the cap was a non-binding backstop worth only ~1.35x.
+#
+# It is paired with unbounded reads and only defensible because of them. On the
+# measured runs the model found the correct file at step 6 and step 2 but did not
+# edit until step 29 and step 14 -- the entire gap was traversing a 2,917-line file
+# through a 400-line window. Whole-file reads should collapse that gap to one step.
+#
+# 10. Raised from 5 after three models each spent 5 steps and produced NO edit at
+# all -- every one was still orienting when the budget ran out, so 5 would have
+# produced 0/100 across the board and a table with no signal in it.
+#
+# Still an explicit, acknowledged design choice driven partly by budget. It is not an
+# attempt to measure django bug-fixing in general.
+#
+# What 5 steps actually measures: can a model locate and fix a real bug in about five
+# tool calls. The minimum viable path is roughly one grep to locate, one whole-file
+# read, one edit -- so the cap admits only tasks the model gets right almost
+# immediately, with no budget to recover from a wrong first hypothesis.
+#
+# Measured context for how tight this is: on the two observed runs the model first
+# touched the correct file at step 6 and step 2, and first edited at step 29 and step
+# 14 (under a 400-line read bound). Whole-file reads should collapse most of that
+# gap, but task 15759 would not have located its file at all within 5 steps.
+#
+# Consequences to report honestly rather than discover later:
+#   - Resolve rates are a LOWER BOUND on capability, not an estimate of it.
+#   - Differences between models will lean toward speed of localisation rather than
+#     depth of reasoning. That is a coherent thing to measure, and it aligns with the
+#     efficiency axis -- but it is not the same axis as correctness.
+#   - If every model floors near zero the comparison carries no signal, and per the
+#     freeze policy the cap cannot be raised after results exist.
+max_steps: 10
 
 # The model may not execute the test suite. It gets no verification signal
 # inside the loop; it must reason from the code alone.

@@ -1,0 +1,40 @@
+commit b33c31d992591bc8e8d20ac156809e4ae5b45375
+Author: khadyottakale <khadyottakale@gmail.com>
+Date:   Sun Feb 22 14:28:45 2026 +0530
+
+    Fixed #36940 -- Fixed script name edge case in ASGIRequest.path_info.
+    
+    Paths that happened to begin with the script name were inappropriately
+    stripped, instead of checking that script name preceded a slash.
+
+diff --git a/tests/handlers/tests.py b/tests/handlers/tests.py
+index 83dfd95713..625090a66d 100644
+--- a/tests/handlers/tests.py
++++ b/tests/handlers/tests.py
+@@ -346,6 +346,26 @@ class AsyncHandlerRequestTests(SimpleTestCase):
+         self.assertEqual(request.script_name, "/FORCED_PREFIX")
+         self.assertEqual(request.path_info, "/somepath/")
+ 
++    def test_root_path_prefix_boundary(self):
++        async_request_factory = AsyncRequestFactory()
++        # When path shares a textual prefix with root_path but not at a
++        # segment boundary, path_info should be the full path.
++        request = async_request_factory.request(
++            **{"path": "/rootprefix/somepath/", "root_path": "/root"}
++        )
++        self.assertEqual(request.path, "/rootprefix/somepath/")
++        self.assertEqual(request.script_name, "/root")
++        self.assertEqual(request.path_info, "/rootprefix/somepath/")
++
++    def test_root_path_trailing_slash(self):
++        async_request_factory = AsyncRequestFactory()
++        request = async_request_factory.request(
++            **{"path": "/root/somepath/", "root_path": "/root/"}
++        )
++        self.assertEqual(request.path, "/root/somepath/")
++        self.assertEqual(request.script_name, "/root/")
++        self.assertEqual(request.path_info, "/somepath/")
++
+     async def test_sync_streaming(self):
+         response = await self.async_client.get("/streaming/")
+         self.assertEqual(response.status_code, 200)

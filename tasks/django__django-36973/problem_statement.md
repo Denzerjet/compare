@@ -30,9 +30,6 @@ it compares a model's managers' name and its related object field name.
 
 ` related_object_name = rel_objs.name `
 
-**Patch:**
-It should use the .accessor_name instead of .name
-```
-_[a proposed patch was removed from this report]_
+<!-- hand-edited: do not regenerate -->
 
 Reported in django ticket #36973: https://code.djangoproject.com/ticket/36973

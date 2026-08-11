@@ -1,0 +1,355 @@
+commit 08b4dfc5734f5d2fce685eabcd65385a6656db2f
+Author: VIZZARD-X <vigneshanandmay13@gmail.com>
+Date:   Sat Jan 10 02:26:37 2026 +0530
+
+    Fixed #36857 -- Added QuerySet.totally_ordered property.
+    
+    Thanks Simon Charette for the idea.
+
+diff --git a/tests/admin_changelist/tests.py b/tests/admin_changelist/tests.py
+index a36574d4df..b067bc9660 100644
+--- a/tests/admin_changelist/tests.py
++++ b/tests/admin_changelist/tests.py
+@@ -17,14 +17,14 @@ from django.contrib.admin.views.main import (
+ )
+ from django.contrib.auth.models import User
+ from django.contrib.messages.storage.cookie import CookieStorage
+-from django.db import DatabaseError, connection, models
++from django.db import DatabaseError, connection
+ from django.db.models import F, Field, IntegerField
+ from django.db.models.functions import Upper
+ from django.db.models.lookups import Contains, Exact
+ from django.template import Context, Template, TemplateSyntaxError
+ from django.test import TestCase, override_settings, skipUnlessDBFeature
+ from django.test.client import RequestFactory
+-from django.test.utils import CaptureQueriesContext, isolate_apps, register_lookup
++from django.test.utils import CaptureQueriesContext, register_lookup
+ from django.urls import reverse
+ from django.utils import formats
+ 
+@@ -1582,176 +1582,6 @@ class ChangeListTests(TestCase):
+         OrderedObjectAdmin.ordering = ["id", "bool"]
+         check_results_order(ascending=True)
+ 
+-    @isolate_apps("admin_changelist")
+-    def test_total_ordering_optimization(self):
+-        class Related(models.Model):
+-            unique_field = models.BooleanField(unique=True)
+-
+-            class Meta:
+-                ordering = ("unique_field",)
+-
+-        class Model(models.Model):
+-            unique_field = models.BooleanField(unique=True)
+-            unique_nullable_field = models.BooleanField(unique=True, null=True)
+-            related = models.ForeignKey(Related, models.CASCADE)
+-            other_related = models.ForeignKey(Related, models.CASCADE)
+-            related_unique = models.OneToOneField(Related, models.CASCADE)
+-            field = models.BooleanField()
+-            other_field = models.BooleanField()
+-            null_field = models.BooleanField(null=True)
+-
+-            class Meta:
+-                unique_together = {
+-                    ("field", "other_field"),
+-                    ("field", "null_field"),
+-                    ("related", "other_related_id"),
+-                }
+-
+-        class ModelAdmin(admin.ModelAdmin):
+-            def get_queryset(self, request):
+-                return Model.objects.none()
+-
+-        request = self._mocked_authenticated_request("/", self.superuser)
+-        site = admin.AdminSite(name="admin")
+-        model_admin = ModelAdmin(Model, site)
+-        change_list = model_admin.get_changelist_instance(request)
+-        tests = (
+-            ([], ["-pk"]),
+-            # Unique non-nullable field.
+-            (["unique_field"], ["unique_field"]),
+-            (["-unique_field"], ["-unique_field"]),
+-            # Unique nullable field.
+-            (["unique_nullable_field"], ["unique_nullable_field", "-pk"]),
+-            # Field.
+-            (["field"], ["field", "-pk"]),
+-            # Related field introspection is not implemented.
+-            (["related__unique_field"], ["related__unique_field", "-pk"]),
+-            # Related attname unique.
+-            (["related_unique_id"], ["related_unique_id"]),
+-            # Related ordering introspection is not implemented.
+-            (["related_unique"], ["related_unique", "-pk"]),
+-            # Composite unique.
+-            (["field", "-other_field"], ["field", "-other_field"]),
+-            # Composite unique nullable.
+-            (["-field", "null_field"], ["-field", "null_field", "-pk"]),
+-            # Composite unique and nullable.
+-            (
+-                ["-field", "null_field", "other_field"],
+-                ["-field", "null_field", "other_field"],
+-            ),
+-            # Composite unique attnames.
+-            (["related_id", "-other_related_id"], ["related_id", "-other_related_id"]),
+-            # Composite unique names.
+-            (["related", "-other_related_id"], ["related", "-other_related_id", "-pk"]),
+-        )
+-        # F() objects composite unique.
+-        total_ordering = [F("field"), F("other_field").desc(nulls_last=True)]
+-        # F() objects composite unique nullable.
+-        non_total_ordering = [F("field"), F("null_field").desc(nulls_last=True)]
+-        tests += (
+-            (total_ordering, total_ordering),
+-            (non_total_ordering, non_total_ordering + ["-pk"]),
+-        )
+-        for ordering, expected in tests:
+-            with self.subTest(ordering=ordering):
+-                self.assertEqual(
+-                    change_list._get_deterministic_ordering(ordering), expected
+-                )
+-
+-    @isolate_apps("admin_changelist")
+-    def test_total_ordering_optimization_meta_constraints(self):
+-        class Related(models.Model):
+-            unique_field = models.BooleanField(unique=True)
+-
+-            class Meta:
+-                ordering = ("unique_field",)
+-
+-        class Model(models.Model):
+-            field_1 = models.BooleanField()
+-            field_2 = models.BooleanField()
+-            field_3 = models.BooleanField()
+-            field_4 = models.BooleanField()
+-            field_5 = models.BooleanField()
+-            field_6 = models.BooleanField()
+-            nullable_1 = models.BooleanField(null=True)
+-            nullable_2 = models.BooleanField(null=True)
+-            related_1 = models.ForeignKey(Related, models.CASCADE)
+-            related_2 = models.ForeignKey(Related, models.CASCADE)
+-            related_3 = models.ForeignKey(Related, models.CASCADE)
+-            related_4 = models.ForeignKey(Related, models.CASCADE)
+-
+-            class Meta:
+-                constraints = [
+-                    *[
+-                        models.UniqueConstraint(fields=fields, name="".join(fields))
+-                        for fields in (
+-                            ["field_1"],
+-                            ["nullable_1"],
+-                            ["related_1"],
+-                            ["related_2_id"],
+-                            ["field_2", "field_3"],
+-                            ["field_2", "nullable_2"],
+-                            ["field_2", "related_3"],
+-                            ["field_3", "related_4_id"],
+-                        )
+-                    ],
+-                    models.CheckConstraint(condition=models.Q(id__gt=0), name="foo"),
+-                    models.UniqueConstraint(
+-                        fields=["field_5"],
+-                        condition=models.Q(id__gt=10),
+-                        name="total_ordering_1",
+-                    ),
+-                    models.UniqueConstraint(
+-                        fields=["field_6"],
+-                        condition=models.Q(),
+-                        name="total_ordering",
+-                    ),
+-                ]
+-
+-        class ModelAdmin(admin.ModelAdmin):
+-            def get_queryset(self, request):
+-                return Model.objects.none()
+-
+-        request = self._mocked_authenticated_request("/", self.superuser)
+-        site = admin.AdminSite(name="admin")
+-        model_admin = ModelAdmin(Model, site)
+-        change_list = model_admin.get_changelist_instance(request)
+-        tests = (
+-            # Unique non-nullable field.
+-            (["field_1"], ["field_1"]),
+-            # Unique nullable field.
+-            (["nullable_1"], ["nullable_1", "-pk"]),
+-            # Related attname unique.
+-            (["related_1_id"], ["related_1_id"]),
+-            (["related_2_id"], ["related_2_id"]),
+-            # Related ordering introspection is not implemented.
+-            (["related_1"], ["related_1", "-pk"]),
+-            # Composite unique.
+-            (["-field_2", "field_3"], ["-field_2", "field_3"]),
+-            # Composite unique nullable.
+-            (["field_2", "-nullable_2"], ["field_2", "-nullable_2", "-pk"]),
+-            # Composite unique and nullable.
+-            (
+-                ["field_2", "-nullable_2", "field_3"],
+-                ["field_2", "-nullable_2", "field_3"],
+-            ),
+-            # Composite field and related field name.
+-            (["field_2", "-related_3"], ["field_2", "-related_3", "-pk"]),
+-            (["field_3", "related_4"], ["field_3", "related_4", "-pk"]),
+-            # Composite field and related field attname.
+-            (["field_2", "related_3_id"], ["field_2", "related_3_id"]),
+-            (["field_3", "-related_4_id"], ["field_3", "-related_4_id"]),
+-            # Partial unique constraint is ignored.
+-            (["field_5"], ["field_5", "-pk"]),
+-            # Unique constraint with an empty condition.
+-            (["field_6"], ["field_6"]),
+-        )
+-        for ordering, expected in tests:
+-            with self.subTest(ordering=ordering):
+-                self.assertEqual(
+-                    change_list._get_deterministic_ordering(ordering), expected
+-                )
+-
+     def test_dynamic_list_filter(self):
+         """
+         Regression tests for ticket #17646: dynamic list_filter support.
+diff --git a/tests/composite_pk/tests.py b/tests/composite_pk/tests.py
+index 3653beceed..264a1bb7c2 100644
+--- a/tests/composite_pk/tests.py
++++ b/tests/composite_pk/tests.py
+@@ -17,7 +17,7 @@ from django.db.models import CompositePrimaryKey
+ from django.forms import modelform_factory
+ from django.test import TestCase
+ 
+-from .models import Comment, Post, Tenant, TimeStamped, User
++from .models import Comment, Post, Tenant, TimeStamped, Token, User
+ 
+ 
+ class CommentForm(forms.ModelForm):
+@@ -282,6 +282,16 @@ class CompositePKTests(TestCase):
+         ):
+             self.assertIsNone(modelform_factory(Comment, fields=["pk"]))
+ 
++    def test_totally_ordered(self):
++        """
++        QuerySet.totally_ordered returns True when ordering by all fields of a
++        composite primary key and False when ordering by a subset.
++        """
++        qs_ordered = Token.objects.order_by("tenant_id", "id")
++        self.assertIs(qs_ordered.totally_ordered, True)
++        qs_partial = Token.objects.order_by("tenant_id")
++        self.assertIs(qs_partial.totally_ordered, False)
++
+ 
+ class CompositePKFixturesTests(TestCase):
+     fixtures = ["tenant"]
+diff --git a/tests/ordering/models.py b/tests/ordering/models.py
+index c365da7642..a4e4b82d40 100644
+--- a/tests/ordering/models.py
++++ b/tests/ordering/models.py
+@@ -59,6 +59,7 @@ class ChildArticle(Article):
+ 
+ class Reference(models.Model):
+     article = models.ForeignKey(OrderedByAuthorArticle, models.CASCADE)
++    proof = models.OneToOneField(Article, models.CASCADE, related_name="+")
+ 
+     class Meta:
+         ordering = ("article",)
+@@ -80,3 +81,31 @@ class OrderedByExpressionChild(models.Model):
+ 
+ class OrderedByExpressionGrandChild(models.Model):
+     parent = models.ForeignKey(OrderedByExpressionChild, models.CASCADE)
++
++
++class BarcodedArticle(models.Model):
++    rank = models.IntegerField(unique=True, null=True)
++    headline = models.CharField(max_length=100)
++    slug = models.CharField(max_length=100, default="slug")
++    pub_date = models.DateField(null=True)
++    barcode = models.CharField(max_length=30, default="bar")
++
++    class Meta:
++        required_db_features = {"supports_partial_indexes"}
++        unique_together = (("headline", "slug"),)
++        constraints = [
++            models.UniqueConstraint(
++                fields=["pub_date", "rank"],
++                name="unique_pub_date_rank",
++            ),
++            models.UniqueConstraint(
++                fields=["rank"],
++                condition=models.Q(rank__gt=0),
++                name="unique_rank_conditional",
++            ),
++            models.UniqueConstraint(
++                fields=["barcode"],
++                condition=models.Q(),
++                name="unique_barcode_empty_condition",
++            ),
++        ]
+diff --git a/tests/ordering/tests.py b/tests/ordering/tests.py
+index 008f0239b3..c4ffc7a89d 100644
+--- a/tests/ordering/tests.py
++++ b/tests/ordering/tests.py
+@@ -18,11 +18,12 @@ from django.db.models import (
+     When,
+ )
+ from django.db.models.functions import Length, Upper
+-from django.test import TestCase
++from django.test import SimpleTestCase, TestCase
+ 
+ from .models import (
+     Article,
+     Author,
++    BarcodedArticle,
+     ChildArticle,
+     OrderedByExpression,
+     OrderedByExpressionChild,
+@@ -583,8 +584,8 @@ class OrderingTests(TestCase):
+         self.a2.author = second_author
+         self.a2.second_author = first_author
+         self.a2.save()
+-        r1 = Reference.objects.create(article_id=self.a1.pk)
+-        r2 = Reference.objects.create(article_id=self.a2.pk)
++        r1 = Reference.objects.create(article_id=self.a1.pk, proof_id=self.a1.pk)
++        r2 = Reference.objects.create(article_id=self.a2.pk, proof_id=self.a2.pk)
+         self.assertSequenceEqual(Reference.objects.all(), [r2, r1])
+ 
+     def test_default_ordering_by_f_expression(self):
+@@ -688,3 +689,45 @@ class OrderingTests(TestCase):
+             F("num").desc(), "pk"
+         )
+         self.assertCountEqual(qs, qs.iterator())
++
++
++class TotallyOrderedTests(SimpleTestCase):
++    def test_basic_ordering(self):
++        self.assertIs(Author.objects.all().totally_ordered, True)
++        self.assertIs(Author.objects.order_by("name").totally_ordered, False)
++        self.assertIs(BarcodedArticle.objects.order_by("rank").totally_ordered, False)
++        self.assertIs(
++            BarcodedArticle.objects.order_by("rank", "pk").totally_ordered, True
++        )
++
++    def test_composite_constraints(self):
++        qs = BarcodedArticle.objects.order_by("pub_date", "rank")
++        self.assertIs(qs.totally_ordered, False)
++        qs = BarcodedArticle.objects.order_by("headline", "slug")
++        self.assertIs(qs.totally_ordered, True)
++
++    def test_reverse_ordering(self):
++        self.assertIs(Author.objects.order_by("-pk").totally_ordered, True)
++
++    def test_f_expressions(self):
++        self.assertIs(Author.objects.order_by(F("pk")).totally_ordered, True)
++        self.assertIs(Author.objects.order_by(F("name")).totally_ordered, False)
++
++    def test_one_to_one_relation(self):
++        qs = Reference.objects.order_by("proof")
++        self.assertIs(qs.totally_ordered, False)
++        qs = Reference.objects.order_by("proof_id")
++        self.assertIs(qs.totally_ordered, True)
++
++    def test_relation_traversal(self):
++        self.assertIs(Article.objects.order_by("author__pk").totally_ordered, False)
++
++    def test_conditional_constraints(self):
++        self.assertIs(BarcodedArticle.objects.order_by("rank").totally_ordered, False)
++        self.assertIs(BarcodedArticle.objects.order_by("barcode").totally_ordered, True)
++
++    def test_totally_ordered_none(self):
++        qs = Author.objects.order_by().none()
++        self.assertIs(qs.totally_ordered, False)
++        qs = Author.objects.order_by("pk").none()
++        self.assertIs(qs.totally_ordered, True)

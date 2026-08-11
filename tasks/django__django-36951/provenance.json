@@ -1,0 +1,38 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "497d9cdc67f0bdae929fcde677b5f441e94a6c8b",
+  "base_commit": "bbc6818bc12f14c1764a7eb68556018195f56b59",
+  "commit_date": "2026-02-25",
+  "subject": "Fixed #36951 -- Removed empty exc_info from log_task_finished signal handler.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/36951",
+  "source_files": [
+    "django/tasks/signals.py"
+  ],
+  "test_files": [
+    "tests/tasks/test_immediate_backend.py"
+  ],
+  "dropped_files": [
+    "docs/releases/6.0.3.txt"
+  ],
+  "full_test_labels": [
+    "tasks.test_immediate_backend"
+  ],
+  "narrowed_test_labels": [
+    "tasks.test_immediate_backend"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 1.41,
+  "harness_retries": 0,
+  "statement_leak_markers": [
+    "github.com/django/django/pull"
+  ],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 1,
+    "residual_leaks": []
+  }
+}

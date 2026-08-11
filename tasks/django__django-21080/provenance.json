@@ -1,0 +1,38 @@
+{
+  "source": "mined",
+  "repo": "https://github.com/django/django",
+  "fix_commit": "36be97b99d4de786746a8d80bbcd41de03752df9",
+  "base_commit": "35dab0ad9ee2ed23101420cb0f253deda2818191",
+  "commit_date": "2026-03-04",
+  "subject": "Fixed #21080 -- Ignored urls inside comments during collectstatic.",
+  "trac_ticket": "https://code.djangoproject.com/ticket/21080",
+  "source_files": [
+    "django/contrib/staticfiles/storage.py"
+  ],
+  "test_files": [
+    "tests/staticfiles_tests/project/documents/cached/css/ignored.css",
+    "tests/staticfiles_tests/project/documents/cached/module.js",
+    "tests/staticfiles_tests/test_storage.py"
+  ],
+  "dropped_files": [
+    "docs/ref/contrib/staticfiles.txt"
+  ],
+  "full_test_labels": [
+    "staticfiles_tests.test_storage"
+  ],
+  "narrowed_test_labels": [
+    "staticfiles_tests.test_storage"
+  ],
+  "skipped_tests": [],
+  "graded_runtime_sec": 2.98,
+  "harness_retries": 0,
+  "statement_leak_markers": [],
+  "statement": {
+    "needs_review": false,
+    "truncated_at": "",
+    "stripped_parens": [],
+    "stripped_diff_blocks": 0,
+    "unfollowable_links": 0,
+    "residual_leaks": []
+  }
+}

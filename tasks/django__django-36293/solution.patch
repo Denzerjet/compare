@@ -1,0 +1,35 @@
+commit 12bb16da8fbadac34e2de318cc79d7d765f35a96
+Author: farhan <farhanalirazaazeemi@gmail.com>
+Date:   Sat Dec 13 23:33:33 2025 +0500
+
+    Fixed #36293 -- Avoided buffering streaming responses in GZipMiddleware.
+    
+    This avoids latency and/or blocking.
+    
+    The example of streaming a CSV file was rewritten to employ batching for
+    greater efficiency in all layers (db, HTTP, etc.). The improved
+    performance from batching should outweigh the drag introduced by an
+    additional byte for each flush.
+    
+    Co-authored-by: huoyinghui <huoyinghui@users.noreply.github.com>
+
+diff --git a/django/utils/text.py b/django/utils/text.py
+index cfe6ceca9e..d1306f9c6f 100644
+--- a/django/utils/text.py
++++ b/django/utils/text.py
+@@ -382,6 +382,7 @@ def compress_sequence(sequence, *, max_random_bytes=None):
+         yield buf.read()
+         for item in sequence:
+             zfile.write(item)
++            zfile.flush()
+             data = buf.read()
+             if data:
+                 yield data
+@@ -398,6 +399,7 @@ async def acompress_sequence(sequence, *, max_random_bytes=None):
+         yield buf.read()
+         async for item in sequence:
+             zfile.write(item)
++            zfile.flush()
+             data = buf.read()
+             if data:
+                 yield data
